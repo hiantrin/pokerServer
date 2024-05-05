@@ -62,6 +62,11 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: true,
+    },
+    avatar64: {
+        type: String,
+        required: true,
+        default: null
     }
 })
 
