@@ -36,7 +36,7 @@ const createTheUser = async (infos, req) => {
         req.error = false;
         req.myToken = response.authToken
     }).catch((err) => {
-        // console.log("this is the error", err)
+        console.log("this is the error", err)
         req.error = true
     })
 }
@@ -45,6 +45,7 @@ router.post('/createUser', checkUsername, async (req, res) => {
    createTheUser(req.body, req)
    if ( req.error )
     {
+        console.log("hamza")
         res.status(404).send("database error")
         return
     }
