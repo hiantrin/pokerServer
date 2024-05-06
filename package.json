@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "nodemon server",
-    "dev": "nodemon server"
+    "dev": "nodemon server",
+    "build": "echo Build completed"
+
   },
   "keywords": [],
   "author": "",
