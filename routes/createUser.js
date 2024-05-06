@@ -45,7 +45,6 @@ router.post('/createUser', checkUsername, async (req, res) => {
    createTheUser(req.body, req)
    if ( req.error )
     {
-        console.log("hamza")
         res.status(404).send("database error")
         return
     }

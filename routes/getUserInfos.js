@@ -22,7 +22,6 @@ router.get('/getUserInfos', checkToken, async (req, res) => {
 
 router.patch("/updateUserInfos", checkToken, async (req, res) => {
     const {username, email, fullName, avatar64} = req.body
-    console.log(username, email, fullName)
     await User.findByIdAndUpdate(req.userId, { 
         $set: {username, email, fullName, avatar64}
     }, { new: true, runValidators: true}).then((response) => {
