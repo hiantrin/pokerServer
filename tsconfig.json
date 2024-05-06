@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "./dist",
+    "allowJs": true  // Uncommment this if you have JS files to include in the build
+  },
+  "include": [
+    "**/*"  // Ensure this path points to where your JS or TS files are
+  ],
+  "exclude": [
+    "node_modules",  // Typically exclude node_modules
+    "dist"  // Exclude the output directory to avoid recursive compilation
+  ]
+}
