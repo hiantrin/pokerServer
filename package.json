@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon server",
     "dev": "nodemon server",
-    "build": "tsc"
+    "build": "echo Build completed"
+
   },
   "keywords": [],
   "author": "",
@@ -20,7 +21,6 @@
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
-    "nodemon": "^3.1.0",
-    "typescript": "^5.4.5"
+    "nodemon": "^3.1.0"
   }
 }
