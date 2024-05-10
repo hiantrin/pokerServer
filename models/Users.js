@@ -66,6 +66,10 @@ const userSchema = new mongoose.Schema({
     avatar64: {
         type: String,
         required: false,
+    },
+    roomId : {
+        type: String,
+        default: null
     }
 })
 

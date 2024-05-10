@@ -20,52 +20,41 @@ const generateRandomUsername =  (inputUsername) => {
 
 
 const createTheUser = async (infos, req) => {
-    const myId = infos?.id && infos.userType !== "guest" ? infos.id : uuidv4()
-    const randomUsername = generateRandomUsername(infos.username);
-    const token = jwt.sign(myId, process.env.ACCESS_TOKEN_SECRET)
-    const user = new User({
-        username: randomUsername,
-        userType: infos.userType,
-        authToken: token,
-        avatar: infos?.profile ? infos.profile : null,
-        email: infos?.email ? infos.email : null,
-        fullName: infos?.fullName ? infos.fullName : null,
-        _id: myId,
-    })
-    await user.save().then((response) => {
-        req.error = false;
-        req.myToken = response.authToken
-    }).catch((err) => {
-        console.log("this is the error", err)
-        req.error = true
-    })
+    try {
+        const myId = infos?.id && infos.userType !== "guest" ? infos.id : uuidv4()
+        const randomUsername = generateRandomUsername(infos.username);
+        const token = jwt.sign(myId, process.env.ACCESS_TOKEN_SECRET)
+        const user = new User({
+            username: randomUsername,
+            userType: infos.userType,
+            authToken: token,
+            avatar: infos?.profile ? infos.profile : null,
+            email: infos?.email ? infos.email : null,
+            fullName: infos?.fullName ? infos.fullName : null,
+            _id: myId,
+        })
+        const response = await user.save()
+        return { error: false, authToken: response.authToken };
+    } catch (err) {
+        return { error: true };
+    }
 }
 
 router.post('/createUser', checkUsername, async (req, res) => {
-   createTheUser(req.body, req)
-   if ( req.error )
-    {
-        res.status(404).send("database error")
-        return
-    }
-    else
-    {
-        res.status(200).send(req.myToken)
-        return
+    const result = await createTheUser(req.body, req)
+    if (result.error) {
+        res.status(500).send("Database error");
+    } else {
+        res.status(200).send(result.authToken);
     }
 })
 
 router.post('/createUserGoogle', checkUser(collection), async (req, res) => {
-    await createTheUser(req.body, req)
-    if ( req.error )
-    {
-        res.status(404).send("database error")
-        return
-    }
-    else
-    {
-        res.status(200).send(req.myToken)
-        return
+    const result = await createTheUser(req.body, req)
+    if (result.error) {
+        res.status(500).send("Database error");
+    } else {
+        res.status(200).send(result.authToken);
     }
 })
 
