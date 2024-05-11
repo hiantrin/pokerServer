@@ -6,7 +6,9 @@
   "scripts": {
     "start": "nodemon server",
     "dev": "nodemon server",
-    "build": "npm install --omit=dev && npm run build"
+    "build": "tsc",
+    "install": "npm install",
+    "install:prod": "npm install --omit=dev"
   },
   "keywords": [],
   "author": "",
