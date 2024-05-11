@@ -50,7 +50,7 @@ io.on('connection', (socket) => {
     socket.broadcast.emit('updatePlayers');
   });
 
-    // Handle disconnection
+
 });
 
 app.get("/", (req, res) => {
