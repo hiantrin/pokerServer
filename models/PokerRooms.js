@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import playerSchema from "./Player.js";
 
 const pokerRoomSchema = new mongoose.Schema({
     roomId : {
@@ -22,6 +22,14 @@ const pokerRoomSchema = new mongoose.Schema({
     full : {
         type: Boolean,
         required: true,
+    },
+    playersData : {
+        type : [playerSchema],
+        default : [],
+    },
+    gameStarted : {
+        type: Boolean,
+        required: true
     }
 })
 

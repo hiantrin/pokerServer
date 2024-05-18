@@ -10,7 +10,19 @@ const db = mongoose.connection
 const collection = db.collection('users');
 const pokerRoomCollection = db.collection("pokerrooms")
 
-const createTable = async (value, userId, persons) => {
+const createNode = (user) => {
+    const node = {
+        userId : user._id,
+        currentCards: null,
+        currentTextEmoji : "",
+        userShips: user.ships,
+        avatar: user.avatar,
+        avatar64: user.avatar64
+    }
+    return node
+}
+
+const createTable = async (value, userId, persons, user) => {
     try {
         const roomId = uuidv4()
         const players = [userId]
@@ -19,18 +31,21 @@ const createTable = async (value, userId, persons) => {
             maxPlayers : persons,
             buyIn : 200000,
             players,
-            full: false
+            full: false,
+            playersData: [createNode(user)],
+            gameStarted: false,
         })
         const response = await room.save()
         return response.roomId
     } catch (err) {
+        console.log(err)
         return null
     }
 }
 
 router.patch("/quitTable", checkToken, async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.userId, { 
+        const user = await User.findByIdAndUpdate(req.userId, {
             $set: {roomId: null}
         }, { new: true, runValidators: true})
         if (!user)
@@ -39,7 +54,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
         if (!room)
             return res.status(400).send("didn't find room")
         const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-            $set : {players : room.players.filter(item => item != req.userId), full: false}
+            $set : {players : room.players.filter(item => item != req.userId ), full: false, playersData: room.playersData.filter(item => item.userId != req.userId)}
         }, {new: true, runValidators: true})
         if (!newRoom)
             return res.status(400).send("room not found")
@@ -51,10 +66,10 @@ router.patch("/quitTable", checkToken, async (req, res) => {
 
 router.get("/getPlayersInfos", checkToken, async (req, res) => {
     try {
-        const players = await User.find({roomId: req.query.roomId})
-        if (!players)
+        const room = await PokerRoom.find({roomId: req.query.roomId})
+        if (!room)
             return res.status(400).send("there is an error in the room")
-        res.status(200).send(players)
+        res.status(200).send(room[0])
     } catch (err) {
         console.log(err)
         res.status(400).send("Internal server Error")
@@ -71,18 +86,21 @@ router.get("/joinRoom", checkToken, async (req, res) => {
             return res.status(300).send("room is full")
         else if (!room.players.includes(req.userId))
             room.players.push(req.userId)
-        const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-            $set : {players : room.players, full: room.players.length == room.players.maxPlayers ? true : false}
-        }, {new: true, runValidators: true})
-        if (!newRoom)
-            return res.status(400).send("sorry can't join room right now")
         const user = await User.findByIdAndUpdate(req.userId, {
-            $set : {roomId: newRoom.roomId}
+            $set : {roomId: room.roomId}
         }, {new: true, runValidators: true})
         if (!user)
             return res.status(400).send("didn't find the user")
+        if (room.playersData.filter(item => item.userId == req.userId))
+            room.playersData.push(createNode(user))
+        const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+            $set : {players : room.players, playersData: room.playersData, full: room.players.length == room.players.maxPlayers ? true : false}
+        }, {new: true, runValidators: true})
+        if (!newRoom)
+            return res.status(400).send("sorry can't join room right now")
         res.status(200).send(user)
     } catch (err) {
+        console.log(err)
         res.status(400).send("Internal server error")
     }
 })
@@ -110,7 +128,7 @@ router.post("/createTable", checkToken, async (req, res) => {
             return res.status(405).send('User not found');
         }
 
-        const roomId = await createTable(value, req.userId, persons);
+        const roomId = await createTable(value, req.userId, persons, user);
         if (!roomId) {
             return res.status(500).send('Error creating room');
         }
