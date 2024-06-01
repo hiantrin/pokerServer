@@ -30,6 +30,10 @@ const pokerRoomSchema = new mongoose.Schema({
     gameStarted : {
         type: Boolean,
         required: true
+    },
+    playersTurn : {
+        type: String,
+        required: false
     }
 })
 

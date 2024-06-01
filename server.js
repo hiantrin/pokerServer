@@ -12,6 +12,7 @@ import http from 'http'
 import cors from 'cors'
 import checkToStartGame from './utils/checkToStartGame.js';
 import startTheGame from './utils/startTheGame.js';
+import leaveTheGame from './utils/leaveTheGame.js'
 
 
 
@@ -56,17 +57,24 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', async (room) => {
     socket.join(room);
     io.to(room).emit('updatePlayers');
-    // try {
-    //   const hasTwoPlayers = await checkToStartGame(room);
-    //   if (hasTwoPlayers)
-    //     startTheGame(room, io)
-    // } catch (error) {
-    //   console.error('Error checking to start game:', error);
-    // }
+    try {
+      const hasTwoPlayers = await checkToStartGame(room);
+      if (hasTwoPlayers)
+        startTheGame(room, io)
+    } catch (error) {
+      console.error('Error checking to start game:', error);
+    }
   });
 
-  socket.on('leaveRoom', (room) => {
+  socket.on('leaveRoom', async (room) => {
     socket.leave(room);
+    try {
+      const hasTwoPlayers = await checkToStartGame(room);
+      if (!hasTwoPlayers)
+        leaveTheGame(room)
+    } catch (error) {
+      console.error('Error checking to start game:', error);
+    }
     io.to(room).emit('updatePlayers');
   });
 });
