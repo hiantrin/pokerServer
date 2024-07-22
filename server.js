@@ -7,7 +7,6 @@ import mongoose from "mongoose";
 import storeRoute from "./routes/buyFromStore.js"
 import tableRoute from "./routes/createTable.js"
 import playsRoute from "./routes/pokerPlays.js"
-import clubRoute from "./routes/clubs.js"
 import { Server as SocketServer } from 'socket.io'
 import http from 'http'
 import cors from 'cors'
@@ -49,7 +48,6 @@ app.use('/user', usersRoute, infosRoute)
 app.use('/store', storeRoute)
 app.use('/pokerGame', tableRoute)
 app.use('/playPoker', playsRoute)
-app.use('/clubs', clubRoute)
 
 
 
