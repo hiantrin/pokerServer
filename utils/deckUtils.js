@@ -33,3 +33,13 @@ export function createDeck() {
   
     return players;
 }
+
+export function dealCommunityCards(deck) {
+  const communityCards = [];
+
+  for (let i = 0; i < 5; i++) {
+    communityCards.push(deck.pop());
+  }
+
+  return communityCards;
+}

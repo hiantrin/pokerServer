@@ -55,6 +55,10 @@ const pokerRoomSchema = new mongoose.Schema({
     lastRaise: {
         type: Number,
         default: 50
+    },
+    communityCards: {
+      type: Array,
+      default: []
     }
 })
 

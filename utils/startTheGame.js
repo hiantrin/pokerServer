@@ -153,7 +153,7 @@
 
 
 import mongoose from "mongoose";
-import { createDeck, shuffleDeck, dealCards } from './deckUtils.js';
+import { createDeck, shuffleDeck, dealCards, dealCommunityCards } from './deckUtils.js';
 import { setRoomState } from "./roomState.js";
 
 
@@ -314,6 +314,10 @@ const startTheGame = async (roomId, io, socket) => {
       const deck = createDeck();
       shuffleDeck(deck);
       const hands = dealCards(deck, room.players.length);
+      const communityCards = dealCommunityCards(deck)
+      console.log(communityCards)
+      room.communityCards = communityCards
+      console.log(room.communityCards)
       
       let newAmountOfShips = 0
 
@@ -337,8 +341,12 @@ const startTheGame = async (roomId, io, socket) => {
       if (room.players.length >= 2){
         let counter = 0
         if (room.gameRound === 'start'){
-          console.log(room.playersData[counter])
           room.playersData[counter].playerStatus = 'dealer'
+
+          // just added the community cards
+          await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
+            $set : {communityCards: room.communityCards}
+          }, { returnDocument: 'after', runValidators: true })
 
           await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
             $set : {playersTurn: room.players[counter]}
@@ -401,17 +409,9 @@ const startTheGame = async (roomId, io, socket) => {
 
           socket.on('call', async (data) => {
             const { userId } = data;
-            console.log("data I get from the front")
-            console.log("====================================")
-            console.log(data)
-            console.log("====================================")
+            
             // Add logic to handle 'call'
             let room = await pokerRoomCollection.findOne({ roomId: roomId }, { lastRaise: 1, _id: 0 });
-
-            // console.log(room.playersData[counter])
-            console.log(room)
-            console.log("counter :: ", counter)
-            // console.log(room.playersData[counter].userShips)
 
             if (counter < room.players.length){
               await pokerRoomCollection.findOneAndUpdate(
@@ -423,7 +423,10 @@ const startTheGame = async (roomId, io, socket) => {
                 { new: true, runValidators: true }
               );
               // modify user ships in the "room" object
-              console.log('let\'s modify the user ships here')
+              console.log('=======================================')
+              console.log("player sent the signal :: ", userId)
+              console.log("player's turn :: ", room.playersTurn)
+              console.log('=======================================')
               
               room.playersData.map((player)=>{
                 if (player.userId === room.playersTurn)
