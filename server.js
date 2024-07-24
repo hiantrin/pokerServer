@@ -14,6 +14,7 @@ import cors from 'cors'
 import checkToStartGame from './utils/checkToStartGame.js';
 import startTheGame from './utils/startTheGame.js';
 import leaveTheGame from './utils/leaveTheGame.js'
+import friendsRoute from "./routes/friends.js"
 
 
 
@@ -50,6 +51,7 @@ app.use('/store', storeRoute)
 app.use('/pokerGame', tableRoute)
 app.use('/playPoker', playsRoute)
 app.use('/clubs', clubRoute)
+app.use("/friends", friendsRoute)
 
 
 
