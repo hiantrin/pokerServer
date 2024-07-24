@@ -1,6 +1,29 @@
 import mongoose from "mongoose";
 
 
+const requestSchema = new mongoose.Schema({
+    _id : {
+        type: String,
+        required: true,
+    },
+    username : {
+        type : String,
+        required : true,
+    },
+    avatar: {
+        type: String,
+        required: false,
+    },
+    avatar64: {
+        type: String,
+        required: false,
+    },
+    requestType: {
+        type: String,
+        required: true,
+    }
+})
+
 const clubSchema = new mongoose.Schema({
     _id : {
         type: String,
@@ -122,6 +145,10 @@ const userSchema = new mongoose.Schema({
         type: [clubSchema], // Array of strings to hold card IDs or names
         default: null,
     },
+    requests : {
+        type : [requestSchema],
+        default: []
+    }
 })
 
 const User = mongoose.model('User', userSchema);
