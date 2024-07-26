@@ -404,6 +404,7 @@ const startTheGame = async (roomId, io, socket) => {
         }
         console.log(room.gameRound)
         if (room.gameRound === 'preflop'){
+          console.log("this is the start of the preflop.")
           console.log('counter in the preflop :: ', counter)
           let firstTurn = true
 
@@ -414,6 +415,7 @@ const startTheGame = async (roomId, io, socket) => {
             let room = await pokerRoomCollection.findOne({ roomId: roomId }, { lastRaise: 1, _id: 0 });
 
             if (counter < room.players.length){
+              console.log("the counter is smaller than room.players.length -> counter :: ", counter)
               await pokerRoomCollection.findOneAndUpdate(
                 { roomId: roomId, 'playersData.userId': room.players[counter] },
                 { $set: { 
@@ -423,11 +425,10 @@ const startTheGame = async (roomId, io, socket) => {
                 { new: true, runValidators: true }
               );
               // modify user ships in the "room" object
-              console.log('=======================================')
-              console.log("player sent the signal :: ", userId)
-              console.log("player's turn :: ", room.playersTurn)
-              console.log('=======================================')
-              
+              console.log("before modifying the user ships")
+              console.log("player id from socket :: ", userId)
+              console.log("player trun id :: ", room.playersTurn)
+              console.log('=================================')
               room.playersData.map((player)=>{
                 if (player.userId === room.playersTurn)
                     player.userShips -= room.lastRaise
@@ -444,8 +445,27 @@ const startTheGame = async (roomId, io, socket) => {
             }
 
             if (counter === room.players.length && firstTurn){
+              console.log('before')
+              console.log("=============================")
+              console.log("counter :: ", counter)
+              console.log("room.players.length :: ", room.players.length)
+              console.log("firstTurn :: ", firstTurn)
+              console.log("=============================")
+
               firstTurn = false
               counter = 0
+
+              console.log('after')
+              console.log("=============================")
+              console.log("counter :: ", counter)
+              console.log("room.players.length :: ", room.players.length)
+              console.log("firstTurn :: ", firstTurn)
+              console.log("=============================")
+              //just added it
+              await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
+                $set : {playersTurn: room.players[counter]}
+              }, { returnDocument: 'after', runValidators: true })
+
               await pokerRoomCollection.findOneAndUpdate(
                 { roomId: roomId, 'playersData.userId': room.players[counter] },
                 { $set: { 
@@ -454,43 +474,53 @@ const startTheGame = async (roomId, io, socket) => {
                  } },
                 { new: true, runValidators: true }
               );
-              // modify user ships in the "room" object
-              room.playersData.map((player)=>{
-                if (player.userId === room.playersTurn)
-                    player.userShips -= room.lastRaise
-              })
   
               await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
                 $set : {'paud': room.paud + room.lastRaise}
               }, { returnDocument: 'after', runValidators: true })
               io.to(roomId).emit('updatePlayers');
+
+              // modify user ships in the "room" object
+              console.log("before modifying the user ships")
+              console.log("player id userId :: ", userId)
+              console.log("player trun id :: ", room.playersTurn)
+              console.log('=================================')
+              room.playersData.map((player)=>{
+                if (player.userId === room.playersTurn)
+                    player.userShips -= room.lastRaise
+              })
               // increase the paud in "room" object
               room.paud += room.lastRaise
               counter = room.players.length 
-            }
-            
-
-            if (counter === room.players.length && !firstTurn){
+            }else if (counter === room.players.length && !firstTurn){
               // i think i have to add a while loop
               // while(true){
-                let userWithBellowRaise = room.playersData.find(player => {
-                  if (player.raised < room.lastRaise && player.inTheGame === true)
-                    return true
-                })
-                if (userWithBellowRaise === undefined){
-                  room.gameRound = 'flop'
-                  await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
-                    $set : {gameRound: 'flop'}
-                  }, { returnDocument: 'after', runValidators: true })
-                  io.to(roomId).emit('updatePlayers');
-                  // break;
-                }else{
-                  room.playersTurn = userWithBellowRaise.userId
-                  await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
-                    $set : {playersTurn: userWithBellowRaise.userId}
-                  }, { returnDocument: 'after', runValidators: true })
-                  io.to(roomId).emit('updatePlayers');
-                }
+              console.log('we are here.')
+              console.log('before')
+              console.log("=============================")
+              console.log("counter :: ", counter)
+              console.log("room.players.length :: ", room.players.length)
+              console.log("firstTurn :: ", firstTurn)
+              console.log("=============================")
+
+              let userWithBellowRaise = room.playersData.find(player => {
+                if (player.raised < room.lastRaise && player.inTheGame === true)
+                  return true
+              })
+              if (userWithBellowRaise === undefined){
+                room.gameRound = 'flop'
+                await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
+                  $set : {gameRound: 'flop'}
+                }, { returnDocument: 'after', runValidators: true })
+                io.to(roomId).emit('updatePlayers');
+                // break;
+              }else{
+                room.playersTurn = userWithBellowRaise.userId
+                await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
+                  $set : {playersTurn: userWithBellowRaise.userId}
+                }, { returnDocument: 'after', runValidators: true })
+                io.to(roomId).emit('updatePlayers');
+              }
               // }
               counter = 0
             }
