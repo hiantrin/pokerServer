@@ -1,5 +1,24 @@
 import mongoose from "mongoose";
 
+const MemebersSchema = new mongoose.Schema({
+    _id : {
+        type: String,
+        required: true,
+    },
+    username : {
+        type : String,
+        required : true,
+    },
+    avatar: {
+        type: String,
+        required: false,
+    },
+    avatar64: {
+        type: String,
+        required: false,
+    }
+})
+
 const clubSchema = new mongoose.Schema({
     _id : {
         type: String,
@@ -44,6 +63,10 @@ const clubSchema = new mongoose.Schema({
     ownerId: {
         type: String,
         required: true,
+    },
+    members : {
+        type: [MemebersSchema],
+        required: true
     }
 })
 

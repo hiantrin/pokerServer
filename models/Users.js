@@ -1,5 +1,23 @@
 import mongoose from "mongoose";
 
+const MemebersSchema = new mongoose.Schema({
+    _id : {
+        type: String,
+        required: true,
+    },
+    username : {
+        type : String,
+        required : true,
+    },
+    avatar: {
+        type: String,
+        required: false,
+    },
+    avatar64: {
+        type: String,
+        required: false,
+    }
+})
 
 const requestSchema = new mongoose.Schema({
     _id : {
@@ -21,7 +39,15 @@ const requestSchema = new mongoose.Schema({
     requestType: {
         type: String,
         required: true,
-    }
+    },
+    clubName: {
+        type: String,
+        required: false,
+    },
+    clubId : {
+        type: String,
+        required: false,
+    },
 })
 
 const clubSchema = new mongoose.Schema({
@@ -68,6 +94,10 @@ const clubSchema = new mongoose.Schema({
     ownerId: {
         type: String,
         required: true,
+    },
+    members : {
+        type: [MemebersSchema],
+        required: true
     }
 })
 
@@ -148,6 +178,10 @@ const userSchema = new mongoose.Schema({
     requests : {
         type : [requestSchema],
         default: []
+    },
+    friends: {
+        type: [requestSchema],
+        default: [],
     }
 })
 
