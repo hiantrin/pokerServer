@@ -55,7 +55,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             return res.status(400).send("didn't find room")
         const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
             $set : {players : room.players.filter(item => item != req.userId ), full: false, playersData: room.playersData.filter(item => item.userId != req.userId)}
-        }, {new: true, runValidators: true})
+        }, {new: true, runValidators: true} )
         if (!newRoom)
             return res.status(400).send("room not found")
         res.status(200).send(user)
