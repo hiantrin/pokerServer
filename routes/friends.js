@@ -5,9 +5,11 @@ import User from "../models/Users.js";
 
 
 
+
 const router = express.Router()
 const db = mongoose.connection
 const collection = db.collection('users');
+const clubCollection = db.collection("clubs")
 
 const createRequest = (user, type, req) => {
     const theRequest = {
@@ -20,6 +22,25 @@ const createRequest = (user, type, req) => {
         clubId : type == "Club" ? req.body.clubId : ""
     }
     return theRequest
+}
+
+const alreadyFriend = (theCatcher, user, requestType, theClub) => {
+    if (theCatcher._id == user._id)
+            return false
+    const myUser = theCatcher.requests.filter((item) => item._id == user._id)
+    if (myUser.length !== 0)
+        return false
+    const myUserFriends = theCatcher.friends.filter((item) => item._id == user._id)
+    if (myUserFriends.length !== 0)
+        return false
+
+    if (requestType == "Club")
+    {
+        const existMember = theClub.members.filter((item) => item._id == user._id)
+        if (existMember.length !== 0)
+            return false
+    }
+    return true
 }
 
 router.post("/acceptDeclineFriendShip", checkToken, async (req, res) => {
@@ -77,6 +98,11 @@ router.post("/sendFriendRequest", checkToken, async (req, res) => {
         if (!theCatcher) {
             return res.status(405).send('User not found');
         }
+        const myClub = await clubCollection.findOne({_id: req.body.clubId})
+        if (!alreadyFriend(theCatcher, user, type, myClub))
+        {
+            return res.status(200).send("yes its already here")
+        }
         const theRequest = createRequest(user, type, req)
         theCatcher.requests.push(theRequest)
         const newUser  = await User.findByIdAndUpdate(theCatcher._id, {
@@ -84,7 +110,6 @@ router.post("/sendFriendRequest", checkToken, async (req, res) => {
         if (!newUser) {
             return res.status(404).send('error creating club');
         }
-        console.log(newUser)
         res.status(200).send("request been send")
     } catch (err) {
         console.error('Internal server error:', err);

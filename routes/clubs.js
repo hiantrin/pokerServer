@@ -51,6 +51,52 @@ const createClub = async (infos, user) => {
 //     }
 // }
 
+router.post("/deleteMember", checkToken, async (req, res) => {
+    const {clubId} = req.body
+    try {
+        const user = await userCollection.findOne({ _id: req.userId });
+        if (!user) {
+            return res.status(405).send('User not found');
+        }
+        const club = await clubCollection.findOne({_id: clubId})
+        if (!club) {
+            return res.status(405).send('User not found');
+        }
+        await Club.findByIdAndUpdate(clubId, {
+            $set : {members: club.members.filter((item) => item._id !== user._id)}
+        }, {new: true, runValidators: true})
+        const newUser = await User.findByIdAndUpdate(user._id, {
+            $set : {clubs: user.clubs.filter((item) => item._id !== clubId)}
+        }, {new: true, runValidators: true})
+        res.status(200).send(newUser)
+    } catch (err) {
+        console.error('Internal server error:', err);
+        res.status(500).send('Internal server error');
+    }
+})
+
+router.post("/changeClubData", checkToken , async (req, res) => {
+    const { clubId , booleans} = req.body
+    try {
+        const user = await userCollection.findOne({ _id: req.userId });
+        if (!user) {
+            return res.status(405).send('User not found');
+        }
+        const newClub = await Club.findByIdAndUpdate(clubId, {
+            $set : {private: booleans.private, newGames: booleans.newGames, memberMessages: booleans.messages}
+        }, {new: true, runValidators: true})
+        const updatedClubs = user.clubs.filter((item) => item._id !== clubId)
+        updatedClubs.push(newClub)
+        const newUser = await User.findByIdAndUpdate(user._id, {
+            $set : {clubs: updatedClubs}
+        }, {new: true, runValidators: true})
+        return res.status(200).send(newUser)
+    } catch (err) {
+        console.error('Internal server error:', err);
+        res.status(500).send('Internal server error');
+    }
+})
+
 router.post("/acceptClubInvite", checkToken, async (req, res) => {
     const {clubId, requestId} = req.body
     try {
@@ -71,7 +117,7 @@ router.post("/acceptClubInvite", checkToken, async (req, res) => {
             $set : {members: myClub.members}
         }, {new: true, runValidators: true})
         user.clubs.push(newClub)
-        const theUser = await userCollection.findOneAndUpdate({_id : req.userId},
+        const theUser = await User.findByIdAndUpdate(req.userId,
             {$set: {requests: user.requests.filter((item) => item._id !== requestId), clubs: user.clubs}},
             {new: true, runValidators: true})
             console.log(theUser)
@@ -80,6 +126,28 @@ router.post("/acceptClubInvite", checkToken, async (req, res) => {
         console.error('Internal server error:', err);
         res.status(500).send('Internal server error');
     }
+})
+
+router.post("/joinClub", checkToken, async (req, res) => {
+    const { clubId } = req.body;
+    try {
+        const user = await userCollection.findOne({ _id: req.userId });
+        if (!user) {
+            return res.status(405).send('User not found');
+        }
+        const club = await clubCollection.findOne({_id: clubId})
+        if (club.members.filter((item) => item._id == req.userId).length !== 0 || club.requests.filter((item) => item._id == req.userId).length !== 0)
+            return res.status(200).send('its aleready here');
+        const newRequest = createMember(user)
+        club.requests.push(newRequest)
+        const clubUpdated = await Club.findByIdAndUpdate(clubId,
+            {$set: {requests: club.requests}} , {new: true, runValidators: true}
+        )
+        res.status(200).send("its updated");
+    } catch (err) {
+        console.error('Internal server error:', err);
+        res.status(500).send('Internal server error');
+    }    
 })
 
 router.post("/createClub", checkToken, async (req, res) => {
@@ -105,6 +173,20 @@ router.post("/createClub", checkToken, async (req, res) => {
     }    
 })
 
+router.get("/getAllClubsInfos", checkToken, async (req, res) => {
+    try {
+        const user = await userCollection.findOne({ _id: req.userId });
+        if (!user) {
+            return res.status(405).send('User not found');
+        }
+        const allUsers = await Club.find({})
+        res.status(200).send(allUsers)
+    } catch (err) {
+        console.error('Internal server error:', err);
+        res.status(500).send('Internal server error');
+    }
+})
+
 router.get("/getClubInfos", checkToken, async(req, res) => {
     try {
         const user = await userCollection.findOne({ _id: req.userId });
@@ -118,6 +200,39 @@ router.get("/getClubInfos", checkToken, async(req, res) => {
         console.log(myClub)
         res.status(200).send(myClub)
     } catch (err) {
+        console.error('Internal server error:', err);
+        res.status(500).send('Internal server error');
+    }
+})
+
+router.post("/acceptClubMembers", checkToken, async (req, res) => {
+    const {clubId, theRequest, type} = req.body
+    try {
+        const user = await userCollection.findOne({ _id: req.userId });
+        if (!user) {
+            return res.status(405).send('User not found');
+        }
+        const myClub = await clubCollection.findOne({_id: clubId})
+        if (!myClub) {
+            return res.status(405).send('club not found');
+        }
+        if (type == "accept")
+        {
+            myClub.members.push(theRequest)
+        }
+        const newClub = await Club.findByIdAndUpdate(clubId, {
+            $set: {requests: myClub.requests.filter((item) => item._id !== theRequest._id), members: myClub.members}
+        } ,{new: true, runValidators: true})
+        if (type == "accept")
+        {
+            const requester = await userCollection.findOne({ _id: theRequest._id })
+            requester.clubs.push(newClub)
+            await User.findByIdAndUpdate(requester._id, {
+                $set: {clubs: requester.clubs}
+            }, {new: true, runValidators: true})
+        }
+        return res.status(200).send(newClub)
+    } catch {
         console.error('Internal server error:', err);
         res.status(500).send('Internal server error');
     }
