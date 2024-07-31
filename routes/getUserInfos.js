@@ -35,4 +35,16 @@ router.patch("/updateUserInfos", checkToken, async (req, res) => {
     })
 })
 
+router.get("/getAllUsers", async (req, res) => {
+    console.log("hamza")
+    try {
+        const users = await User.find({})
+        if(!users)
+            res.status(200).send([])
+        res.status(200).send(users)
+    } catch (err) {
+        res.status(500).send("Internal server Error")
+    }
+})
+
 export default router
