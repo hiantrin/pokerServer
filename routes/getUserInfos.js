@@ -47,4 +47,30 @@ router.get("/getAllUsers", async (req, res) => {
     }
 })
 
+router.post("/changeGoldShips", async (req, res ) => {
+    const {userId, type, amount} = req.body
+    try {
+        const user = await collection.findOne({_id : userId})
+        if (!user) {
+            return res.status(405).send('User not found');
+        }
+        if (type == "gold")
+        {
+            const newUser = await User.findByIdAndUpdate(userId, {
+                $set : {gold: amount}
+            }, {new: true, runValidators: true})
+            return res.status(200).send(newUser)
+
+        } else if (type == "ships") {
+            const newUser = await User.findByIdAndUpdate(userId, {
+                $set : {ships: amount}
+            }, {new: true, runValidators: true})
+            return res.status(200).send(newUser)
+        }
+
+    } catch (err) {
+        res.status(500).send('Internal server error');
+    }
+})
+
 export default router

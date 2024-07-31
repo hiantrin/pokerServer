@@ -238,4 +238,39 @@ router.post("/acceptClubMembers", checkToken, async (req, res) => {
     }
 })
 
+////////// admin
+router.get("/getAllClubs", async (req, res) => {
+    try {
+        const clubs = await Club.find({})
+        if(!clubs)
+            res.status(200).send([])
+        res.status(200).send(clubs)
+    } catch (err) {
+        res.status(500).send("Internal server Error")
+    }
+})
+
+router.post("/deleteMemberAdmin", async (req, res) => {
+    const { clubId, memberId } = req.body
+    try {
+        const user = await userCollection.findOne({ _id: memberId });
+        if (!user) {
+            return res.status(405).send('User not found');
+        }
+        const myClub = await clubCollection.findOne({_id: clubId})
+        if (!myClub) {
+            return res.status(405).send('club not found');
+        }
+        await User.findByIdAndUpdate(user._id, {
+            $set : {clubs: user.clubs.filter((item) => item._id !== clubId)}
+        }, {new: true, runValidators: true})
+        const newClub = await Club.findByIdAndUpdate(clubId, {
+            $set : {members: myClub.members.filter((item) => item._id !== memberId)}
+        }, {new: true, runValidators: true})
+        res.status(200).send(newClub)
+    } catch (err) {
+        res.status(500).send("Internal server error")
+    }
+})
+
 export default router
