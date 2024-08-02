@@ -71,6 +71,10 @@ const clubSchema = new mongoose.Schema({
     requests : {
         type : [MemebersSchema],
         default: []
+    },
+    games : {
+        type : [String],
+        default: []
     }
 })
 

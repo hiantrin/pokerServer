@@ -4,11 +4,13 @@ import checkToken from "../middlewares/checkToken.js";
 import { v4 as uuidv4 } from 'uuid';
 import PokerRoom from "../models/PokerRooms.js";
 import User from "../models/Users.js";
+import Club from "../models/Club.js";
 
 const router = express.Router()
 const db = mongoose.connection
 const collection = db.collection('users');
 const pokerRoomCollection = db.collection("pokerrooms")
+const clubCollection = db.collection("clubs")
 
 const createNode = (user) => {
     const node = {
@@ -117,7 +119,7 @@ router.get("/getTableInfos", checkToken, async (req, res) => {
 })
 
 router.post("/createTable", checkToken, async (req, res) => {
-    const { value , persons } = req.body
+    const { value , persons , clubId} = req.body
 
     if (!persons || value < 0  || value > 8 || (persons != 4 && persons != 6))
         return res.status(405).send("check your Informations")
@@ -132,7 +134,14 @@ router.post("/createTable", checkToken, async (req, res) => {
         if (!roomId) {
             return res.status(500).send('Error creating room');
         }
-
+        if (clubId)
+        {
+            const club = await clubCollection.findOne({ _id: clubId})
+            club.games.push(roomId)
+            await Club.findByIdAndUpdate(club._id, {
+                $set : {games: club.games}
+            },  {new: true, runValidators: true})
+        }
         const userRoom = await User.findByIdAndUpdate(req.userId, { 
             $set: { roomId: roomId } }, {new: true, runValidators: true} );
         if (!userRoom) {
@@ -144,5 +153,6 @@ router.post("/createTable", checkToken, async (req, res) => {
         res.status(500).send('Internal server error');
     }
 })
+
 
 export default router
