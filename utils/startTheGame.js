@@ -315,9 +315,7 @@ const startTheGame = async (roomId, io, socket) => {
       shuffleDeck(deck);
       const hands = dealCards(deck, room.players.length);
       const communityCards = dealCommunityCards(deck)
-      console.log(communityCards)
       room.communityCards = communityCards
-      console.log(room.communityCards)
       
       let newAmountOfShips = 0
 
@@ -400,12 +398,10 @@ const startTheGame = async (roomId, io, socket) => {
           room.gameRound = 'preflop'
           if (counter === room.players.length)
             counter = 0
-          // console.log('last counter in the start :: ', counter)
         }
-        console.log(room.gameRound)
+        
+
         if (room.gameRound === 'preflop'){
-          console.log("this is the start of the preflop.")
-          console.log('counter in the preflop :: ', counter)
           let firstTurn = true
 
           socket.on('call', async (data) => {
@@ -415,7 +411,6 @@ const startTheGame = async (roomId, io, socket) => {
             let room = await pokerRoomCollection.findOne({ roomId: roomId }, { lastRaise: 1, _id: 0 });
 
             if (counter < room.players.length){
-              console.log("the counter is smaller than room.players.length -> counter :: ", counter)
               await pokerRoomCollection.findOneAndUpdate(
                 { roomId: roomId, 'playersData.userId': room.players[counter] },
                 { $set: { 
@@ -424,14 +419,13 @@ const startTheGame = async (roomId, io, socket) => {
                  } },
                 { new: true, runValidators: true }
               );
+
               // modify user ships in the "room" object
-              console.log("before modifying the user ships")
-              console.log("player id from socket :: ", userId)
-              console.log("player trun id :: ", room.playersTurn)
-              console.log('=================================')
+              
               room.playersData.map((player)=>{
-                if (player.userId === room.playersTurn)
-                    player.userShips -= room.lastRaise
+                if (player.userId === room.playersTurn){
+                  player.userShips -= room.lastRaise
+                }
               })
   
               await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
@@ -440,27 +434,19 @@ const startTheGame = async (roomId, io, socket) => {
               io.to(roomId).emit('updatePlayers');
               // increase the paud in "room" object
               room.paud += room.lastRaise
-  
               counter++
-            }
-
-            if (counter === room.players.length && firstTurn){
-              console.log('before')
-              console.log("=============================")
-              console.log("counter :: ", counter)
-              console.log("room.players.length :: ", room.players.length)
-              console.log("firstTurn :: ", firstTurn)
-              console.log("=============================")
-
+              if (counter === room.players.length && firstTurn){
+                await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
+                  $set : {playersTurn: room.players[0]}
+                }, { returnDocument: 'after', runValidators: true })
+                io.to(roomId).emit('updatePlayers');
+                room.playersTurn = room.players[0]
+              }
+            }else if (counter === room.players.length && firstTurn){
+              console.log('Not suposed to come here :: 1')
               firstTurn = false
               counter = 0
 
-              console.log('after')
-              console.log("=============================")
-              console.log("counter :: ", counter)
-              console.log("room.players.length :: ", room.players.length)
-              console.log("firstTurn :: ", firstTurn)
-              console.log("=============================")
               //just added it
               await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
                 $set : {playersTurn: room.players[counter]}
@@ -481,10 +467,7 @@ const startTheGame = async (roomId, io, socket) => {
               io.to(roomId).emit('updatePlayers');
 
               // modify user ships in the "room" object
-              console.log("before modifying the user ships")
-              console.log("player id userId :: ", userId)
-              console.log("player trun id :: ", room.playersTurn)
-              console.log('=================================')
+              
               room.playersData.map((player)=>{
                 if (player.userId === room.playersTurn)
                     player.userShips -= room.lastRaise
@@ -493,42 +476,41 @@ const startTheGame = async (roomId, io, socket) => {
               room.paud += room.lastRaise
               counter = room.players.length 
             }else if (counter === room.players.length && !firstTurn){
-              // i think i have to add a while loop
-              // while(true){
-              console.log('we are here.')
-              console.log('before')
-              console.log("=============================")
-              console.log("counter :: ", counter)
-              console.log("room.players.length :: ", room.players.length)
-              console.log("firstTurn :: ", firstTurn)
-              console.log("=============================")
+              console.log('Not suposed to come here :: 2')
 
               let userWithBellowRaise = room.playersData.find(player => {
                 if (player.raised < room.lastRaise && player.inTheGame === true)
                   return true
               })
+
               if (userWithBellowRaise === undefined){
+                console.log('salina preflop')
                 room.gameRound = 'flop'
                 await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
                   $set : {gameRound: 'flop'}
                 }, { returnDocument: 'after', runValidators: true })
                 io.to(roomId).emit('updatePlayers');
-                // break;
               }else{
+                console.log('ba9i masalina')
                 room.playersTurn = userWithBellowRaise.userId
                 await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
                   $set : {playersTurn: userWithBellowRaise.userId}
                 }, { returnDocument: 'after', runValidators: true })
                 io.to(roomId).emit('updatePlayers');
               }
-              // }
+
               counter = 0
             }
-            await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
-              $set : {playersTurn: room.players[counter]}
-            }, { returnDocument: 'after', runValidators: true })
-            console.log(`${room.playersTurn} called in room ${roomId}`);
-            io.to(roomId).emit('playerCalled', { userId });
+            // await pokerRoomCollection.findOneAndUpdate({roomId: roomId}, {
+            //   $set : {playersTurn: room.players[counter]}
+            // }, { returnDocument: 'after', runValidators: true })
+            // console.log(`${room.playersTurn} called in room ${roomId}`);
+            // io.to(roomId).emit('playerCalled', { userId });
+
+            console.log("the bottom of the function.")
+            console.log("player id sending the  signal :: ", userId)
+            console.log("counter :: ", counter)
+            console.log("room.playersTurn :: ", room.playersTurn)
           });
 
           socket.on('raise', (data) => {
@@ -643,3 +625,36 @@ export default startTheGame
       //   console.log(`${userId} bet ${amount} in room ${roomId}`);
       //   io.to(roomId).emit('playerBet', { userId, amount });
       // });
+
+
+      // tester 
+      // try {
+      //   console.log("room.players[0]", room.players[0]);
+      //   console.log("roomId :: ", roomId);
+      
+      //   // Check the current document state before updating
+      //   const currentDocument = await pokerRoomCollection.findOne({ roomId: roomId });
+      //   console.log("Current document before update:", currentDocument);
+      
+      //   const result = await pokerRoomCollection.findOneAndUpdate(
+      //     { roomId: roomId },
+      //     { $set: { playersTurn: room.players[0] } },
+      //     { returnDocument: 'after', runValidators: true }
+      //   );
+      
+      //   console.log("Update result:", result);
+      
+      //   if (result) {
+      //     console.log("Update successful:", result);
+      //   } else {
+      //     console.log("No matching document found or no changes made.");
+      //   }
+      
+      //   // Check the updated document state after updating
+      //   const updatedDocument = await pokerRoomCollection.findOne({ roomId: roomId });
+      //   console.log("Updated document after update:", updatedDocument);
+      
+      //   io.to(roomId).emit('updatePlayers');
+      // } catch (error) {
+      //   console.error("Error updating document:", error);
+      // }
