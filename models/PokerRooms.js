@@ -56,6 +56,10 @@ const pokerRoomSchema = new mongoose.Schema({
         type: Number,
         default: 50
     },
+    firstTurn : {
+        type: Boolean,
+        default: true
+    },
     communityCards: {
       type: Array,
       default: []
