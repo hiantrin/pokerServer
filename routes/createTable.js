@@ -17,9 +17,9 @@ const createNode = (user) => {
         userId : user._id,
         currentCards: null,
         currentTextEmoji : "",
-        userShips: user.ships,
+        userShips: 1000,
         avatar: user.avatar,
-        avatar64: user.avatar64
+        avatar64: user.avatar64,
     }
     return node
 }
@@ -55,11 +55,20 @@ router.patch("/quitTable", checkToken, async (req, res) => {
         const room = await pokerRoomCollection.findOne({roomId: req.body.roomId})
         if (!room)
             return res.status(400).send("didn't find room")
-        const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-            $set : {players : room.players.filter(item => item != req.userId ), full: false, playersData: room.playersData.filter(item => item.userId != req.userId)}
-        }, {new: true, runValidators: true} )
-        if (!newRoom)
-            return res.status(400).send("room not found")
+        room.playersData = room.playersData.filter((item) => item.userId != req.userId)
+        room.players = room.players.filter(item => item != req.userId)
+        if (room.players.length == 1)
+        {
+            room.gameStarted = false
+            room.gameRound = "preflop"
+            room.lastRaise = 0
+            room.communityCards = []
+            room.playersData[0].currentCards = []
+            room.playersData[0].bet = 0
+            room.playersData[0].userShips = room.playersData[0].userShips + room.paud
+            room.paud = 0
+        }
+        await pokerRoomCollection.updateOne({ roomId: req.body.roomId }, { $set : room });
         res.status(200).send(user)
     } catch (err) {
         res.status(400).send("Internal server Error")

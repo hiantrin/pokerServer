@@ -8,7 +8,7 @@ const pokerRoomCollection = db.collection("pokerrooms")
 async function checkToStartGame(roomId) {
     try {
         const room = await pokerRoomCollection.findOne({ roomId: roomId });
-        if (room && room.players.length === 2 && !room.gameStarted) {
+        if (room && room.players.length >= 2 && !room.gameStarted) {
             return true;
         }
         return false;

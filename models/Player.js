@@ -53,6 +53,14 @@ const playerSchema = new mongoose.Schema({
     raised: {
         type: Number,
         default: 0
+    },
+    bet : {
+        type : Number,
+        default : 0
+    },
+    checked: {
+        type: Boolean,
+        deafult: false
     }
 })
 

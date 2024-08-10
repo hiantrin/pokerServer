@@ -38,7 +38,7 @@ const pokerRoomSchema = new mongoose.Schema({
     // Hamza Rafi
     gameRound : {
         type: String,
-        default: 'start'
+        default: 'preflop'
     },
     smallBlind: {
         type: Number,
@@ -50,7 +50,7 @@ const pokerRoomSchema = new mongoose.Schema({
     },
     paud:{
         type: Number,
-        default: 75
+        default: 0
     },
     lastRaise: {
         type: Number,
@@ -63,6 +63,10 @@ const pokerRoomSchema = new mongoose.Schema({
     communityCards: {
       type: Array,
       default: []
+    },
+    checking : {
+        type: Boolean,
+        deafult: false
     }
 })
 
