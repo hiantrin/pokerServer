@@ -12,12 +12,10 @@ import { Server as SocketServer } from 'socket.io'
 import http from 'http'
 import cors from 'cors'
 import checkToStartGame from './utils/checkToStartGame.js';
-import startTheGame, { allIn, callLastRaise } from './utils/startTheGame.js';
-import leaveTheGame from './utils/leaveTheGame.js'
+import startTheGame from './utils/startTheGame.js';
 import friendsRoute from "./routes/friends.js"
-import { raiseAction } from './utils/startTheGame.js';
-import { playerFolded } from './utils/startTheGame.js';
-import { checkMove } from './utils/startTheGame.js';
+import { raiseAction, checkMove,  allIn, callLastRaise, playerFolded } from './utils/playerMoves/raise.js';
+
 
 
 
