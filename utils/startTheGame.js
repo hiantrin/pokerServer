@@ -136,6 +136,7 @@ export const playerFolded = async (userId, roomId, io) => {
     const room = await pokerRoomCollection.findOne({ roomId: roomId });
     if (!room || userId !== room.playersTurn)
       return
+
     if (room.players.length == 2) {
       let index = room.playersData.findIndex(player => player.userId !== userId);
       room.playersData[index].userShips = room.playersData[index].userShips + room.paud
@@ -147,14 +148,85 @@ export const playerFolded = async (userId, roomId, io) => {
     else {
 		let i = room.playersData.findIndex(player => player.userId === userId);
 		room.playersData[i].inTheGame = false
-		room.playersTurn = nextPlayer(room)
+
 		const playerInGame = room.playersData.filter((item) => item.inTheGame == true)
 		if(playerInGame.length == 1)
 		{
 			let index = room.playersData.findIndex(player => player.userId === playerInGame[0].userId);
 			room.playersData[index].userShips = room.playersData[index].userShips + room.paud
 		}
+		else {
+			const playerChecked = room.playersData.filter((item) => item.inTheGame && !item.checked)
+			const playerCalled = room.playersData.filter((item) => item.inTheGame && item.bet !== room.lastRaise && item.userShips !== 0)
+			const plyerOut = room.playersData.filter((item) => item.inTheGame && item.userShips > 0)
+			if ( room.gameRound !== "preflop" && room.lastRaise == 0 && playerChecked.length == 0)
+			{
+				if (room.gameRound == "flop")
+					room.gameRound = "turn"
+				else if (room.gameRound == "turn")
+					room.gameRound = "river"
+				else if (room.gameRound = "river")
+				{
+					const win  = getBestHandPlayers(room.playersData.filter((item) => item.inTheGame), room.communityCards)
+					let i = 0
+					while (i < win.length)
+					{
+						let myIndex = room.playersData.findIndex(player => player.userId === win[i]);
+						room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.length)
+						i++
+					}
+					await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
+					await startTheGame(roomId, io)
+					return
+				}
+				let counter = 0
+				while (counter < room.playersData.length)
+				{
+					room.playersData[counter].checked = false
+					counter++
+				}
+			} else if (playerCalled.length == 0) {
+				if (room.gameRound == "flop")
+					room.gameRound = "turn"
+				else if (room.gameRound == "turn")
+					room.gameRound = "river"
+				else if (room.gameRound = "river")
+				{
+					const win  = getBestHandPlayers(room.playersData.filter((item) => item.inTheGame), room.communityCards)
+					let i = 0
+					while (i < win.length)
+					{
+						let myIndex = room.playersData.findIndex(player => player.userId === win[i]);
+						room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.length)
+						i++
+					}
+					await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
+					await startTheGame(roomId, io)
+					return
+				}
+			} else if (plyerOut.length < 2) {
+				room.gameRound = "river"
+				room.playersTurn = null
+				const win  = getBestHandPlayers(room.playersData.filter((item) => item.inTheGame), room.communityCards)
+				let i = 0
+				while (i < win.length)
+				{
+					let myIndex = room.playersData.findIndex(player => player.userId === win[i]);
+					room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.length)
+					i++
+				}
+				await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
+					io.to(roomId).emit('updatePlayers');
+					setTimeout(async () => {
+						await startTheGame(roomId, io)
+					}, 2000)
+					return
+				}
+		}
+		// room.playersTurn = nextPlayer(room)
+		room.playersTurn = nextPlayer(room)
 		await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
+		io.to(roomId).emit('updatePlayers');
 		if (playerInGame.length == 1)
 		{
 			await startTheGame(roomId, io)
