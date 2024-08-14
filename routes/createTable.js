@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import PokerRoom from "../models/PokerRooms.js";
 import User from "../models/Users.js";
 import Club from "../models/Club.js";
+import { nextPlayer } from "../utils/startTheGame.js";
 
 const router = express.Router()
 const db = mongoose.connection
@@ -12,29 +13,31 @@ const collection = db.collection('users');
 const pokerRoomCollection = db.collection("pokerrooms")
 const clubCollection = db.collection("clubs")
 
-const createNode = (user) => {
+const createNode = (user, ships) => {
     const node = {
         userId : user._id,
+        username: user.username,
         currentCards: null,
         currentTextEmoji : "",
-        userShips: 1000,
+        userShips: ships,
         avatar: user.avatar,
         avatar64: user.avatar64,
+        inTheGame: false
     }
     return node
 }
 
-const createTable = async (value, userId, persons, user) => {
+const createTable = async (value, userId, persons, user, ships) => {
     try {
         const roomId = uuidv4()
         const players = [userId]
         const room = new PokerRoom({
             roomId,
             maxPlayers : persons,
-            buyIn : 200000,
+            buyIn : ships,
             players,
             full: false,
-            playersData: [createNode(user)],
+            playersData: [createNode(user, ships)],
             gameStarted: false,
         })
         const response = await room.save()
@@ -47,14 +50,30 @@ const createTable = async (value, userId, persons, user) => {
 
 router.patch("/quitTable", checkToken, async (req, res) => {
     try {
-        const user = await User.findByIdAndUpdate(req.userId, {
-            $set: {roomId: null}
-        }, { new: true, runValidators: true})
-        if (!user)
+        const oldUser = await collection.findOne({ _id: req.userId });
+        if (!oldUser)
             return res.status(400).send("user not found")
         const room = await pokerRoomCollection.findOne({roomId: req.body.roomId})
         if (!room)
             return res.status(400).send("didn't find room")
+        const thePlayer = room.playersData.filter((item) => item.userId == req.userId)
+        if (thePlayer.length == 0)
+        {   
+            const waiting = room.waitingRoom.filter((item) => item.userId == req.userId)
+            const user = await User.findByIdAndUpdate(req.userId, {
+                $set: {roomId: null}
+            }, { new: true, runValidators: true})
+            if (waiting.length !== 0)
+            {
+                await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+                    $set : {waitingRoom: room.waitingRoom.filter((item) => item.userId !== req.userId)}
+                }, {new: true, runValidators: true})
+            }
+            return res.status(200).send(user)
+        }
+        const user = await User.findByIdAndUpdate(req.userId, {
+            $set: {roomId: null, ships: oldUser.ships + thePlayer[0].userShips}
+        }, { new: true, runValidators: true})
         room.playersData = room.playersData.filter((item) => item.userId != req.userId)
         room.players = room.players.filter(item => item != req.userId)
         if (room.players.length == 1)
@@ -67,6 +86,10 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             room.playersData[0].bet = 0
             room.playersData[0].userShips = room.playersData[0].userShips + room.paud
             room.paud = 0
+        }
+        else {
+            if (room.playersTurn == req.userId)
+                room.playersTurn = nextPlayer(room)
         }
         await pokerRoomCollection.updateOne({ roomId: req.body.roomId }, { $set : room });
         res.status(200).send(user)
@@ -95,20 +118,36 @@ router.get("/joinRoom", checkToken, async (req, res) => {
             return res.status(400).send("didn't find room")
         else if (room.full)
             return res.status(300).send("room is full")
-        else if (!room.players.includes(req.userId))
+        else if (!room.players.includes(req.userId) && !room.gameStarted)
             room.players.push(req.userId)
-        const user = await User.findByIdAndUpdate(req.userId, {
-            $set : {roomId: room.roomId}
-        }, {new: true, runValidators: true})
-        if (!user)
-            return res.status(400).send("didn't find the user")
-        if (room.playersData.filter(item => item.userId == req.userId))
-            room.playersData.push(createNode(user))
-        const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-            $set : {players : room.players, playersData: room.playersData, full: room.players.length == room.players.maxPlayers ? true : false}
-        }, {new: true, runValidators: true})
-        if (!newRoom)
-            return res.status(400).send("sorry can't join room right now")
+        const oldUser = await collection.findOne({ _id: req.userId });
+        if (!oldUser)
+            return res.status(400).send("didn't find user")
+            const user = await User.findByIdAndUpdate(req.userId, {
+                $set : {roomId: room.roomId, ships: oldUser.ships - room.buyIn}
+            }, {new: true, runValidators: true})
+            if (!user)
+                return res.status(400).send("didn't find the user")
+        if (!room.gameStarted)
+        {
+            if (room.playersData.filter(item => item.userId == req.userId))
+                room.playersData.push(createNode(user, room.buyIn))
+            const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+                $set : {players : room.players, playersData: room.playersData, full: room.players.length == room.players.maxPlayers ? true : false}
+            }, {new: true, runValidators: true})
+            if (!newRoom)
+                return res.status(400).send("sorry can't join room right now")
+        }
+        else {
+            if (room.waitingRoom.filter(item => item.userId == req.userId))
+                room.waitingRoom.push(createNode(user, room.buyIn))
+            const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+                $set : {waitingRoom: room.waitingRoom}
+            }, {new: true, runValidators: true})
+            if (!newRoom)
+                return res.status(400).send("sorry can't join room right now")
+        }
+        
         res.status(200).send(user)
     } catch (err) {
         console.log(err)
@@ -116,6 +155,21 @@ router.get("/joinRoom", checkToken, async (req, res) => {
     }
 })
 
+router.get("/spectate", checkToken, async (req, res) => {
+    try {
+        const room = await pokerRoomCollection.findOne({roomId: req.query.roomId})
+        if (!room)
+            return res.status(400).send("didn't find room")
+        const userRoom = await User.findByIdAndUpdate(req.userId, { 
+            $set: { roomId: req.query.roomId }}, {new: true, runValidators: true});
+        if (!userRoom) {
+            return res.status(404).send('User not found');
+        }
+        res.status(200).send(userRoom);
+    } catch (err) {
+        res.status(400).send("Internal server error")
+    }
+})
 
 
 router.get("/getTableInfos", checkToken, async (req, res) => {
@@ -139,7 +193,7 @@ router.post("/createTable", checkToken, async (req, res) => {
             return res.status(405).send('User not found');
         }
 
-        const roomId = await createTable(value, req.userId, persons, user);
+        const roomId = await createTable(value, req.userId, persons, user, 1000);
         if (!roomId) {
             return res.status(500).send('Error creating room');
         }
@@ -152,7 +206,7 @@ router.post("/createTable", checkToken, async (req, res) => {
             },  {new: true, runValidators: true})
         }
         const userRoom = await User.findByIdAndUpdate(req.userId, { 
-            $set: { roomId: roomId } }, {new: true, runValidators: true} );
+            $set: { roomId: roomId, ships: user.ships - 1000 } }, {new: true, runValidators: true} );
         if (!userRoom) {
             return res.status(404).send('User not found');
         }

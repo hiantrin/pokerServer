@@ -36,7 +36,6 @@ router.patch("/updateUserInfos", checkToken, async (req, res) => {
 })
 
 router.get("/getAllUsers", async (req, res) => {
-    console.log("hamza")
     try {
         const users = await User.find({})
         if(!users)

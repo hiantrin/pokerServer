@@ -54,9 +54,7 @@ router.post("/acceptDeclineFriendShip", checkToken, async (req, res) => {
         if (type == "Accept")
         {
             const newFriend = user.requests.filter((item) => item._id == catcherId)
-            console.log("the new Friend", newFriend)
             user.friends.push(newFriend[0])
-            console.log("the new arrat friend ===> ", user.friends)
             const newUser  = await User.findByIdAndUpdate(req.userId, {
                 $set : {requests: user.requests.filter((item) => item._id !== catcherId), friends: user.friends}} , {new: true, runValidators: true})
             if (!newUser) {

@@ -50,7 +50,6 @@ router.post('/createUser', checkUsername, async (req, res) => {
 })
 
 router.post('/createUserGoogle', checkUser(collection), async (req, res) => {
-    console.log("enter here")
     const result = await createTheUser(req.body, req)
     if (result.error) {
         res.status(500).send("Database error");

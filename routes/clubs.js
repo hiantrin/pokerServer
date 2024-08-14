@@ -104,7 +104,6 @@ router.post("/acceptClubInvite", checkToken, async (req, res) => {
         if (!user) {
             return res.status(405).send('User not found');
         }
-        // console.log(clubId, requestId)
 
         const myClub = await clubCollection.findOne({_id: clubId})
         if (!myClub) {
@@ -120,7 +119,6 @@ router.post("/acceptClubInvite", checkToken, async (req, res) => {
         const theUser = await User.findByIdAndUpdate(req.userId,
             {$set: {requests: user.requests.filter((item) => item._id !== requestId), clubs: user.clubs}},
             {new: true, runValidators: true})
-            console.log(theUser)
         res.status(200).send(theUser);
     } catch (err) {
         console.error('Internal server error:', err);
@@ -197,7 +195,6 @@ router.get("/getClubInfos", checkToken, async(req, res) => {
         if (!myClub) {
             return res.status(405).send('club not found');
         }
-        console.log(myClub)
         res.status(200).send(myClub)
     } catch (err) {
         console.error('Internal server error:', err);

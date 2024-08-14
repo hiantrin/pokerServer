@@ -12,7 +12,7 @@ import { Server as SocketServer } from 'socket.io'
 import http from 'http'
 import cors from 'cors'
 import checkToStartGame from './utils/checkToStartGame.js';
-import startTheGame, { callLastRaise } from './utils/startTheGame.js';
+import startTheGame, { allIn, callLastRaise } from './utils/startTheGame.js';
 import leaveTheGame from './utils/leaveTheGame.js'
 import friendsRoute from "./routes/friends.js"
 import { raiseAction } from './utils/startTheGame.js';
@@ -62,14 +62,19 @@ app.use("/friends", friendsRoute)
 io.on('connection', (socket) => {
 
   // Handle 'login' event
-  socket.on('joinRoom', async (room) => {
+  socket.on('joinRoom', async (room, player) => {
     socket.join(room);
-    try {
-      const hasTwoPlayers = await checkToStartGame(room);
-      if (hasTwoPlayers)
-        startTheGame(room, io, socket)
-    } catch (error) {
-      console.error('Error checking to start game:', error);
+    console.log("the player ==>", player)
+    if (player)
+    {
+      console.log("it send socket")
+        try {
+          const hasTwoPlayers = await checkToStartGame(room);
+          if (hasTwoPlayers)
+            startTheGame(room, io, socket)
+        } catch (error) {
+          console.error('Error checking to start game:', error);
+        }
     }
     io.to(room).emit('updatePlayers');
   });
@@ -83,7 +88,7 @@ io.on('connection', (socket) => {
   socket.on('call', async (data) => {
     const { userId, roomId } = data;
     try {
-      await callLastRaise(userId, roomId)
+      await callLastRaise(userId, roomId, io)
       io.to(roomId).emit('updatePlayers');
     } catch (err) {
       console.error('Error starting the game:', err);
@@ -109,14 +114,23 @@ io.on('connection', (socket) => {
   socket.on('check', async (data) => {
     const { userId, roomId } = data;
     try {
-      await checkMove(userId, roomId)
-      // io.to(roomId).emit('updatePlayers');
-      console.log("it checked")
+      await checkMove(userId, roomId, io)
       io.to(roomId).emit('updatePlayers');
     } catch (err) {
       console.error('Error starting the game:', err);
     }
   });
+
+  socket.on("allIn", async (data) => {
+    const { userId, roomId } = data;
+    try {
+      await allIn(userId, roomId, io)
+      io.to(roomId).emit('updatePlayers');
+    } catch (err) {
+      console.log(err)
+    }
+
+  })
 });
 
 

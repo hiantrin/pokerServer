@@ -22,6 +22,10 @@ const playerSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    username: {
+        type: String,
+        required: true,
+    },
     currentCards: {
         type: [handSchema], // Array of strings to hold card IDs or names
         default: null,

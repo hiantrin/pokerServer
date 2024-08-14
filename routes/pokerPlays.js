@@ -12,7 +12,6 @@ router.post("/sendText", checkToken, async (req, res) => {
     const { text, roomId } = req.body
     const userId = req.userId
     try {
-        console.log("this is the text:  ",text)
         const room = await pokerRoomCollection.findOneAndUpdate(
             { roomId, 'playersData.userId': req.userId }, // Find the room and the specific player
             { $set: { 'playersData.$.currentTextEmoji': text } }, // Update the specific field
