@@ -1,31 +1,35 @@
 import mongoose from "mongoose";
-import startTheGame from "../startTheGame";
-import { getBestHandPlayers } from "../getWinners";
-import { nextPlayer } from "../startTheGame";
-import { nextStage } from "./check";
-import { getWinner } from "./allIn";
+import startTheGame from "../startTheGame.js";
+import { nextPlayer } from "../startTheGame.js";
+import { nextStage } from "./check.js";
+import { getWinner } from "./allIn.js";
 
 const db = mongoose.connection
 
 const pokerRoomCollection = db.collection("pokerrooms")
 
-const launchTwoParty = async (room, roomId, io) => {
-    let index = room.playersData.findIndex(player => player.userId !== userId);
-    room.playersData[index].userShips = room.playersData[index].userShips + room.paud
-    await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-        $set : {playersData: room.playersData}
-    }, {new: true, runValidators: true} )
-    await startTheGame(roomId, io)
+const launchTwoParty = async (room, roomId, io, userId) => {
+    try {
+        let index = room.playersData.findIndex(player => player.userId !== userId);
+        room.playersData[index].userShips = room.playersData[index].userShips + room.paud
+        await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+            $set : {playersData: room.playersData}
+        }, {new: true, runValidators: true} )
+        await startTheGame(roomId, io)
+    } catch (err) {
+        return room
+    }
+    
 }
 
 export const playerFolded = async (userId, roomId, io) => {
     try {
-        const room = await pokerRoomCollection.findOne({ roomId: roomId });
+        let room = await pokerRoomCollection.findOne({ roomId: roomId });
         if (!room || userId !== room.playersTurn)
             return
     
         if (room.players.length == 2) {
-            await launchTwoParty(room, roomId, io)
+            await launchTwoParty(room, roomId, io, userId)
             return
         }
         else {

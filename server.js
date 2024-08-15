@@ -14,7 +14,11 @@ import cors from 'cors'
 import checkToStartGame from './utils/checkToStartGame.js';
 import startTheGame from './utils/startTheGame.js';
 import friendsRoute from "./routes/friends.js"
-import { raiseAction, checkMove,  allIn, callLastRaise, playerFolded } from './utils/playerMoves/raise.js';
+import { raiseAction } from './utils/playerMoves/raise.js';
+import { checkMove  } from './utils/playerMoves/check.js';
+import { allIn } from './utils/playerMoves/allIn.js';
+import { callLastRaise } from './utils/playerMoves/call.js';
+import { playerFolded } from './utils/playerMoves/fold.js';
 
 
 

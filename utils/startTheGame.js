@@ -38,18 +38,23 @@ export const checkIfAllOut = (userId, room, index) => {
 }
 
 const kickUsers = async (room) => {
-	const playersOut = room.playersData.filter((item) => item.userShips <= 0)
-	let i = 0
-	while (i < playersOut.length)
-	{
-		await User.findByIdAndUpdate(playersOut[i].userId, {
-			$set : {roomId: null}
-		}, {new: true, runValidators: true})
-		room.playersData = room.playersData.filter((item) => item.userId !== playersOut[i].userId)
-		room.players = room.players.filter((item) => item !== playersOut[i].userId)
-		i++
+	try {
+		const playersOut = room.playersData.filter((item) => item.userShips <= 0)
+		let i = 0
+		while (i < playersOut.length)
+		{
+			await User.findByIdAndUpdate(playersOut[i].userId, {
+				$set : {roomId: null}
+			}, {new: true, runValidators: true})
+			room.playersData = room.playersData.filter((item) => item.userId !== playersOut[i].userId)
+			room.players = room.players.filter((item) => item !== playersOut[i].userId)
+			i++
+		}
+		return room
+	} catch (err) {
+		return room
 	}
-	return room
+	
 }
 
 const createCardsPlayers = (room) => {
@@ -102,13 +107,14 @@ const initialGame = (room) => {
 	room.gameStarted = false
 	room.checking = false
 	room.gameRound = "preflop"
+	room.playersTurn = null
 	return room
 
 }
 
 const startTheGame = async (roomId, io) => {
   try {
-	const room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }))
+	let room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }))
     if (room && room.playersData.length >= 2) {
 		room = createCardsPlayers(room)
 		let i = 0;

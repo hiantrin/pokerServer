@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
-import { checkIfAllOut } from "../startTheGame";
-import { nextPlayer } from "../startTheGame";
-import { getWinner } from "./allIn";
-import { nextStage } from "./check";
+import { checkIfAllOut } from "../startTheGame.js";
+import { nextPlayer } from "../startTheGame.js";
+import { getWinner } from "./allIn.js";
+import { nextStage } from "./check.js";
 
 const db = mongoose.connection
 
@@ -11,7 +11,7 @@ const pokerRoomCollection = db.collection("pokerrooms")
 
 export const callLastRaise = async (userId, roomId, io) => {
     try {
-        const room = await pokerRoomCollection.findOne({ roomId: roomId });
+        let room = await pokerRoomCollection.findOne({ roomId: roomId });
         if (!room || userId !== room.playersTurn)
             return
         let index = room.playersData.findIndex(player => player.userId === userId);

@@ -217,5 +217,28 @@ router.post("/createTable", checkToken, async (req, res) => {
     }
 })
 
+////// Admin
+router.get("/getAllRooms", async (req, res) => {
+    try {
+        const rooms = await PokerRoom.find({})
+        if (!rooms)
+            res.status(200).send([])
+        res.status(200).send(rooms)
+    } catch (err) {
+        console.log(err)
+        res.status(500).sed("Internal server error")
+    }
+})
+
+router.patch("/changeCards", async (req, res) => {
+    try {
+        
+
+    } catch (err) {
+        console.log(err)
+        res.status(500).send("Internal server error")
+    }
+
+})
 
 export default router

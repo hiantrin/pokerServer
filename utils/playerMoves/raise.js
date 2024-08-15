@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { nextPlayer } from "../startTheGame";
+import { nextPlayer } from "../startTheGame.js";
 
 const db = mongoose.connection
 
@@ -8,7 +8,7 @@ const pokerRoomCollection = db.collection("pokerrooms")
 
 export const raiseAction = async (userId, amount, roomId) => {
     try {
-      const room = await pokerRoomCollection.findOne({ roomId: roomId });
+      let room = await pokerRoomCollection.findOne({ roomId: roomId });
       if (!room || userId !== room.playersTurn)
         return
       let index = room.playersData.findIndex(player => player.userId === userId);
