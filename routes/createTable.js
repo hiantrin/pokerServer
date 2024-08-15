@@ -230,10 +230,62 @@ router.get("/getAllRooms", async (req, res) => {
     }
 })
 
-router.patch("/changeCards", async (req, res) => {
-    try {
-        
+const checkCommunityCards = (cards) => {
+    const seen = new Set();
+    const duplicates = [];
 
+    cards.forEach(item => {
+        // Convert the object to a string for comparison
+        const key = JSON.stringify(item);
+
+        if (seen.has(key)) {
+            duplicates.push(item);
+        } else {
+            seen.add(key);
+        }
+    });
+    if (duplicates.length > 0)
+        return false
+    return true
+}
+
+const checkplayersCards = (cards, playersData) => {
+    const playersCards = []
+    let i = 0
+
+    while (i < playersData.length)
+    {
+        let count = 0
+        while (count < playersData[i].currentCards.length)
+        {
+            playersCards.push(playersData[i].currentCards[count])
+            count++
+        }
+        i++
+    }
+    const allCards = cards.concat(playersCards)
+    if (!checkCommunityCards(allCards))
+        return false
+    return true
+}
+
+router.patch("/changeCards", async (req, res) => {
+    const { roomId, cards } = req.body
+    try {
+        const room = await pokerRoomCollection.findOne({roomId: roomId})
+        if (!room)
+            return res.status(400).send("didn't find room")
+        if (!room.gameStarted)
+            return res.status(400).send("game not started")
+       
+        if (!checkCommunityCards(cards))
+            return res.status(400).send("some cards in communityCards are the same")
+        if (!checkplayersCards(cards, room.playersData))
+            return res.status(400).send("some cards in communityCards  are the same as the players")
+        await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+            $set : {communityCards: cards}
+        }, {new: true, runValidators: true})
+        res.status(200).send("success")
     } catch (err) {
         console.log(err)
         res.status(500).send("Internal server error")
