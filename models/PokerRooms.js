@@ -71,6 +71,10 @@ const pokerRoomSchema = new mongoose.Schema({
     waitingRoom : {
         type : [playerSchema],
         default : [],
+    },
+    robot : {
+        type: Boolean,
+        required: true
     }
 })
 

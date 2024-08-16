@@ -19,6 +19,7 @@ import { checkMove  } from './utils/playerMoves/check.js';
 import { allIn } from './utils/playerMoves/allIn.js';
 import { callLastRaise } from './utils/playerMoves/call.js';
 import { playerFolded } from './utils/playerMoves/fold.js';
+import { quickRobot } from './utils/robot/createRobot.js';
 
 
 
@@ -133,10 +134,28 @@ io.on('connection', (socket) => {
     }
 
   })
+
+  socket.on("addRobot", async (roomId) => {
+    try {
+      const hasTwoPlayers = await checkToStartGame(roomId);
+      if (hasTwoPlayers)
+        startTheGame(roomId, io)
+    } catch (error) {
+      console.error('Error checking to start game:', error);
+    }
+    io.to(roomId).emit('updatePlayers');
+  })
+
+  socket.on("kickRobot", async (data) => {
+    const { roomId, robotId } = data
+    try {
+      await quickRobot(roomId, robotId)
+    } catch (err) {
+      console.log(err)
+    }
+    io.to(roomId).emit('updatePlayers');
+  })
 });
-
-
-
 
 app.get("/", (req, res) => {
     res.send('hamza learning node js and express')

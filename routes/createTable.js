@@ -6,6 +6,7 @@ import PokerRoom from "../models/PokerRooms.js";
 import User from "../models/Users.js";
 import Club from "../models/Club.js";
 import { nextPlayer } from "../utils/startTheGame.js";
+import createRobot from "../utils/robot/createRobot.js";
 
 const router = express.Router()
 const db = mongoose.connection
@@ -22,12 +23,13 @@ const createNode = (user, ships) => {
         userShips: ships,
         avatar: user.avatar,
         avatar64: user.avatar64,
-        inTheGame: false
+        inTheGame: false,
+        robot: false
     }
     return node
 }
 
-const createTable = async (value, userId, persons, user, ships) => {
+const createTable = async (value, userId, persons, user, ships, robot) => {
     try {
         const roomId = uuidv4()
         const players = [userId]
@@ -39,6 +41,7 @@ const createTable = async (value, userId, persons, user, ships) => {
             full: false,
             playersData: [createNode(user, ships)],
             gameStarted: false,
+            robot: robot
         })
         const response = await room.save()
         return response.roomId
@@ -182,7 +185,7 @@ router.get("/getTableInfos", checkToken, async (req, res) => {
 })
 
 router.post("/createTable", checkToken, async (req, res) => {
-    const { value , persons , clubId} = req.body
+    const { value , persons , clubId, robot} = req.body
 
     if (!persons || value < 0  || value > 8 || (persons != 4 && persons != 6))
         return res.status(405).send("check your Informations")
@@ -193,7 +196,7 @@ router.post("/createTable", checkToken, async (req, res) => {
             return res.status(405).send('User not found');
         }
 
-        const roomId = await createTable(value, req.userId, persons, user, 1000);
+        const roomId = await createTable(value, req.userId, persons, user, 1000, robot);
         if (!roomId) {
             return res.status(500).send('Error creating room');
         }
@@ -216,6 +219,21 @@ router.post("/createTable", checkToken, async (req, res) => {
         res.status(500).send('Internal server error');
     }
 })
+
+router.post("/addRobot", checkToken, async (req, res) => {
+    try {
+        const room = await pokerRoomCollection.findOne({roomId: req.body.roomId})
+        if (!room)
+            return res.status(400).send("didn't find room")
+        const robot = await createRobot(room, 1000)
+        if (!robot)
+            return res.status(400).send("sorry robot can't be created right now")
+        res.status(200).send("success")
+    } catch (err) {
+        res.status(500).send('Internal server error');
+    }
+}) 
+
 
 ////// Admin
 router.get("/getAllRooms", async (req, res) => {

@@ -87,7 +87,7 @@ const createCardsPlayers = (room) => {
 			lastRaise: room.bigBlind,
 			bet: 0,
 			checked: false,
-			
+			robot: room.playersData[index].robot,
 		}));
 	return room
 }
@@ -109,6 +109,28 @@ const initialGame = (room) => {
 	room.gameRound = "preflop"
 	room.playersTurn = null
 	return room
+}
+const runListenerTurn = () => {
+	const pokerRoomsChangeStream = PokerRoom.watch();
+
+  pokerRoomsChangeStream.on('change', (change) => {
+    // Check if the change is an update to the playersTurn field
+    if (
+      change.operationType === 'update' &&
+      change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
+    ) {
+      const roomId = change.documentKey._id;
+      const newPlayersTurn = change.updateDescription.updatedFields.playersTurn;
+
+      console.log(`playersTurn changed in room ${roomId}: ${newPlayersTurn}`);
+
+      // Close the listener if playersTurn is null
+      if (newPlayersTurn === null) {
+        console.log(`playersTurn is null in room ${roomId}. Closing listener.`);
+        pokerRoomsChangeStream.close(); // Close the change stream
+      }
+    }
+  });
 
 }
 
@@ -116,6 +138,7 @@ const startTheGame = async (roomId, io) => {
   try {
 	let room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }))
     if (room && room.playersData.length >= 2) {
+		runListenerTurn()
 		room = createCardsPlayers(room)
 		let i = 0;
 		while (i < room.playersData.length)

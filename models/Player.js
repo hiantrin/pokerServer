@@ -64,7 +64,11 @@ const playerSchema = new mongoose.Schema({
     },
     checked: {
         type: Boolean,
-        deafult: false
+        default: false
+    },
+    robot: {
+        type: Boolean,
+        required: true
     }
 })
 
