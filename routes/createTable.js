@@ -321,7 +321,7 @@ router.post("/changeCards", async (req, res) => {
             return res.status(400).send("some cards in communityCards are the same")
         if (!checkplayersCards(cards, room.playersData))
             return res.status(400).send("some cards in communityCards  are the same as the players")
-        const newCards = createCardsToChange = (room, cards)
+        const newCards = createCardsToChange(room, cards)
         await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
             $set : {communityCards: newCards}
         }, {new: true, runValidators: true})
