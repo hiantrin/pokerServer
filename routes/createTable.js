@@ -294,14 +294,14 @@ const createCardsToChange = (room, cards) => {
     else if (room.gameRound == "flop")
     {
         const firstArray = room.communityCards.slice(0, 3)
-        const secondArray = cards.slice(3, 2)
+        const secondArray = cards.slice(3, 5)
         const combinedArray = firstArray.concat(secondArray)
         return combinedArray
     }
     else if (room.gameRound == "turn")
     {
         const firstArray = room.communityCards.slice(0, 4)
-        const secondArray = cards.slice(4, 1)
+        const secondArray = cards.slice(4, 5)
         const combinedArray = firstArray.concat(secondArray)
         return combinedArray
     }
