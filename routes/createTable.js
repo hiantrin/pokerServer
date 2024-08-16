@@ -286,8 +286,29 @@ const checkplayersCards = (cards, playersData) => {
         return false
     return true
 }
+const createCardsToChange = (room, cards) => {
+    if (room.gameRound == "river")
+        return room.communityCards
+    else if (room.gameRound == "preflop")
+        return cards
+    else if (room.gameRound == "flop")
+    {
+        const firstArray = room.communityCards.slice(0, 3)
+        const secondArray = cards.slice(3, 2)
+        const combinedArray = firstArray.concat(secondArray)
+        return combinedArray
+    }
+    else if (room.gameRound == "turn")
+    {
+        const firstArray = room.communityCards.slice(0, 4)
+        const secondArray = cards.slice(4, 1)
+        const combinedArray = firstArray.concat(secondArray)
+        return combinedArray
+    }
+    return room.communityCards
+}
 
-router.patch("/changeCards", async (req, res) => {
+router.post("/changeCards", async (req, res) => {
     const { roomId, cards } = req.body
     try {
         const room = await pokerRoomCollection.findOne({roomId: roomId})
@@ -300,8 +321,9 @@ router.patch("/changeCards", async (req, res) => {
             return res.status(400).send("some cards in communityCards are the same")
         if (!checkplayersCards(cards, room.playersData))
             return res.status(400).send("some cards in communityCards  are the same as the players")
+        const newCards = createCardsToChange = (room, cards)
         await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-            $set : {communityCards: cards}
+            $set : {communityCards: newCards}
         }, {new: true, runValidators: true})
         res.status(200).send("success")
     } catch (err) {

@@ -110,27 +110,29 @@ const initialGame = (room) => {
 	room.playersTurn = null
 	return room
 }
+
+const searchRobot = (playerId) => {
+
+}
+
 const runListenerTurn = () => {
 	const pokerRoomsChangeStream = PokerRoom.watch();
 
-  pokerRoomsChangeStream.on('change', (change) => {
-    // Check if the change is an update to the playersTurn field
-    if (
-      change.operationType === 'update' &&
-      change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
-    ) {
-      const roomId = change.documentKey._id;
-      const newPlayersTurn = change.updateDescription.updatedFields.playersTurn;
+	pokerRoomsChangeStream.on('change', (change) => {
+		// Check if the change is an update to the playersTurn field
+		if ( change.operationType === 'update' && change.updateDescription.updatedFields.hasOwnProperty('playersTurn') ) {
+			const roomId = change.documentKey._id;
+			const newPlayersTurn = change.updateDescription.updatedFields.playersTurn;
 
-      console.log(`playersTurn changed in room ${roomId}: ${newPlayersTurn}`);
+			console.log(`playersTurn changed in room ${roomId}: ${newPlayersTurn}`);
 
-      // Close the listener if playersTurn is null
-      if (newPlayersTurn === null) {
-        console.log(`playersTurn is null in room ${roomId}. Closing listener.`);
-        pokerRoomsChangeStream.close(); // Close the change stream
-      }
-    }
-  });
+			// Close the listener if playersTurn is null
+			if (newPlayersTurn === null) {
+				console.log(`playersTurn is null in room ${roomId}. Closing listener.`);
+				pokerRoomsChangeStream.close(); // Close the change stream
+			}
+		}
+	});
 
 }
 
