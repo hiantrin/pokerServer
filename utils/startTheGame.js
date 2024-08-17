@@ -87,7 +87,7 @@ const createCardsPlayers = (room) => {
 			lastRaise: room.bigBlind,
 			bet: 0,
 			checked: false,
-			robot: room.playersData[index].robot,
+			// robot: room.playersData[index].robot,
 		}));
 	return room
 }

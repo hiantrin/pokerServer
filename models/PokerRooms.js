@@ -72,10 +72,10 @@ const pokerRoomSchema = new mongoose.Schema({
         type : [playerSchema],
         default : [],
     },
-    robot : {
-        type: Boolean,
-        required: true
-    }
+    // robot : {
+    //     type: Boolean,
+    //     required: true
+    // }
 })
 
 // const pokerRoomSchema = new mongoose.Schema({
