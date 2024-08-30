@@ -112,6 +112,7 @@ io.on('connection', (socket) => {
     const { userId, roomId } = data;
     await playerFolded(userId, roomId, io)
     io.to(roomId).emit('updatePlayers');
+      io.to(roomId).emit("playerFolded", userId)
   });
 
   socket.on('check', async (data) => {

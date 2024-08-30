@@ -24,12 +24,12 @@ const createNode = (user, ships) => {
         avatar: user.avatar,
         avatar64: user.avatar64,
         inTheGame: false,
-        // robot: false
+        robot: false
     }
     return node
 }
 
-const createTable = async (value, userId, persons, user, ships) => {
+const createTable = async (value, userId, persons, user, ships, robot) => {
     try {
         const roomId = uuidv4()
         const players = [userId]
@@ -41,7 +41,7 @@ const createTable = async (value, userId, persons, user, ships) => {
             full: false,
             playersData: [createNode(user, ships)],
             gameStarted: false,
-            // robot: robot
+            robot: robot
         })
         const response = await room.save()
         return response.roomId
@@ -89,6 +89,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             room.playersData[0].bet = 0
             room.playersData[0].userShips = room.playersData[0].userShips + room.paud
             room.paud = 0
+            room.playersTurn = null
         }
         else {
             if (room.playersTurn == req.userId)
@@ -185,7 +186,7 @@ router.get("/getTableInfos", checkToken, async (req, res) => {
 })
 
 router.post("/createTable", checkToken, async (req, res) => {
-    const { value , persons , clubId} = req.body
+    const { value , persons , clubId, robot} = req.body
 
     if (!persons || value < 0  || value > 8 || (persons != 4 && persons != 6))
         return res.status(405).send("check your Informations")
@@ -196,7 +197,7 @@ router.post("/createTable", checkToken, async (req, res) => {
             return res.status(405).send('User not found');
         }
 
-        const roomId = await createTable(value, req.userId, persons, user, 1000);
+        const roomId = await createTable(value, req.userId, persons, user, 1000, robot);
         if (!roomId) {
             return res.status(500).send('Error creating room');
         }

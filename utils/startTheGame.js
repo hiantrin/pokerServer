@@ -4,6 +4,7 @@ import { setRoomState } from "./roomState.js";
 import PokerRoom from "../models/PokerRooms.js";
 import { getBestHandPlayers } from "./getWinners.js";
 import User from "../models/Users.js";
+import robotPlays from "./robot/robotPlays.js";
 
 
 const db = mongoose.connection
@@ -87,13 +88,12 @@ const createCardsPlayers = (room) => {
 			lastRaise: room.bigBlind,
 			bet: 0,
 			checked: false,
-			// robot: room.playersData[index].robot,
+			robot: room.playersData[index].robot,
 		}));
 	return room
 }
 
 const initialGame = (room) => {
-
 	room.playersData[0].bet = 0
 	room.playersData[0].inTheGame = true
 	room.playersData[0].raised = 0
@@ -107,40 +107,45 @@ const initialGame = (room) => {
 	room.gameStarted = false
 	room.checking = false
 	room.gameRound = "preflop"
-	room.playersTurn = null
+	room.playersTurn = null,
+	room.playersData[0].robot = false
 	return room
 }
 
-const searchRobot = (playerId) => {
+const runListenerTurn = async (roomId, io) => {
+    const pokerRoomsChangeStream = PokerRoom.watch();
 
-}
+    pokerRoomsChangeStream.on('change', async (change) => {
+        // Check if the change is an update to the playersTurn field in the specific room
+        if (
+            change.operationType === 'update' &&
+            change.documentKey._id &&
+            change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
+        ) {
+            // Fetch the document to check the roomId
+            const room = await PokerRoom.findOne({ _id: change.documentKey._id });
+            
+            if (room && room.playersTurn !== null && room.roomId === roomId) {
+				let index = room.playersData.findIndex((player) => player.userId == room.playersTurn);
+				// Determine if it's a robot's turn or a player's turn
+				if (room.playersData[index].robot === true) {
+				{
+					robotPlays(room, index, io)
+				}
+				} else {
+					console.log("it's the player's turn");
+				}
+            }
+        }
+    });
+};
 
-const runListenerTurn = () => {
-	const pokerRoomsChangeStream = PokerRoom.watch();
-
-	pokerRoomsChangeStream.on('change', (change) => {
-		// Check if the change is an update to the playersTurn field
-		if ( change.operationType === 'update' && change.updateDescription.updatedFields.hasOwnProperty('playersTurn') ) {
-			const roomId = change.documentKey._id;
-			const newPlayersTurn = change.updateDescription.updatedFields.playersTurn;
-
-			console.log(`playersTurn changed in room ${roomId}: ${newPlayersTurn}`);
-
-			// Close the listener if playersTurn is null
-			if (newPlayersTurn === null) {
-				console.log(`playersTurn is null in room ${roomId}. Closing listener.`);
-				pokerRoomsChangeStream.close(); // Close the change stream
-			}
-		}
-	});
-
-}
 
 const startTheGame = async (roomId, io) => {
   try {
 	let room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }))
     if (room && room.playersData.length >= 2) {
-		runListenerTurn()
+		runListenerTurn(roomId, io)
 		room = createCardsPlayers(room)
 		let i = 0;
 		while (i < room.playersData.length)
@@ -165,6 +170,7 @@ const startTheGame = async (roomId, io) => {
         }
         else 
           room.playersTurn = room.players[2]
+		  io.to(roomId).emit('startGame');
     } else {
 		room = initialGame(room)
 	}

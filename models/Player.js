@@ -66,10 +66,10 @@ const playerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    // robot: {
-    //     type: Boolean,
-    //     required: true
-    // }
+    robot: {
+        type: Boolean,
+        required: true
+    }
 })
 
 // const playerSchema = new mongoose.Schema({
