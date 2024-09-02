@@ -1,5 +1,23 @@
 import mongoose from "mongoose";
 import playerSchema from "./Player.js";
+import { handSchema } from "./Player.js";
+
+const winnerSchema = new mongoose.Schema({
+    userId : {
+        type: String,
+        required: true,
+        unique: true
+    },
+    cardsCumminity: {
+        type: [handSchema],
+        default: null
+    },
+    typeWin : {
+        type: String,
+        required: true
+    }
+})
+
 
 const pokerRoomSchema = new mongoose.Schema({
     roomId : {
@@ -75,63 +93,12 @@ const pokerRoomSchema = new mongoose.Schema({
     robot : {
         type: Boolean,
         required: true
+    },
+    winner : {
+        type: winnerSchema,
+        default : null
     }
 })
-
-// const pokerRoomSchema = new mongoose.Schema({
-//     roomId : {
-//         type: String,
-//         required: true,
-//         unique: true,
-//     },
-//     players: {
-//         type: [String],
-//         required: true,
-//     },
-//     buyIn : {
-//         type: Number,
-//         required: true
-//     },
-//     maxPlayers : {
-//         type: Number,
-//         required: true,
-//     },
-//     full : {
-//         type: Boolean,
-//         required: true,
-//     },
-//     playersData : {
-//         type : [playerSchema],
-//         default : [],
-//     },
-//     gameStarted : {
-//         type: Boolean,
-//         required: true
-//     },
-//     playersTurn : {
-//         type: String,
-//         required: false
-//     },
-//     paud : {
-//         type: Number,
-//     },
-//     smallBlind : {
-//         type: Number,
-//         default: 25
-//     },
-//     bigBlind : {
-//         type: Number,
-//         default: 50
-//     },
-//     playRound : {
-//         type: String,
-//         default: "preflop"
-//     },
-//     howMuchToRaise : {
-//         type: Number
-//     }
-// })
-
 
 const PokerRoom = mongoose.model('pokerRoom', pokerRoomSchema);
 

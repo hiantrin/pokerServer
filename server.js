@@ -120,7 +120,7 @@ io.on('connection', (socket) => {
     try {
       await checkMove(userId, roomId, io)
       io.to(roomId).emit('updatePlayers');
-    } catch (err) {
+     } catch (err) {
       console.error('Error starting the game:', err);
     }
   });

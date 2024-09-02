@@ -13,11 +13,16 @@ export const getWinner = async (room, roomId, io) => {
         room.gameRound = "river"
         room.playersTurn = null
         const win  = getBestHandPlayers(room.playersData.filter((item) => item.inTheGame), room.communityCards)
+        room.winner = {
+            userId: win.winningPlayers[0],
+            cardsCumminity: win.winningCommunityCards,
+            typeWin: win.winningCombination
+        }
         let i = 0
-        while (i < win.length)
+        while (i < win.winningPlayers.length)
         {
-            let myIndex = room.playersData.findIndex(player => player.userId === win[i]);
-            room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.length)
+            let myIndex = room.playersData.findIndex(player => player.userId === win.winningPlayers[i]);
+            room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
             i++
         }
         await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });

@@ -10,12 +10,23 @@ const pokerRoomCollection = db.collection("pokerrooms")
 
 const launchTwoParty = async (room, roomId, io, userId) => {
     try {
+        let i = room.playersData.findIndex(player => player.userId === userId);
+        room.playersData[i].inTheGame = false
+        room.playersData[i].bet = 0
         let index = room.playersData.findIndex(player => player.userId !== userId);
         room.playersData[index].userShips = room.playersData[index].userShips + room.paud
+        room.playersTurn = null
+        room.winner = {
+            userId : room.playersData[index].userId,
+            typeWin : "fold",
+            cardsCumminity: null
+        }
         await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-            $set : {playersData: room.playersData}
+            $set : {playersData: room.playersData, playersTurn: room.playersTurn, winner: room.winner}
         }, {new: true, runValidators: true} )
-        await startTheGame(roomId, io)
+        setTimeout(async () => {
+            await startTheGame(roomId, io)
+        }, 3000)
     } catch (err) {
         return room
     }
@@ -35,6 +46,7 @@ export const playerFolded = async (userId, roomId, io) => {
         else {
             let i = room.playersData.findIndex(player => player.userId === userId);
             room.playersData[i].inTheGame = false
+            room.playersData[i].bet = 0
             const playerInGame = room.playersData.filter((item) => item.inTheGame == true)
             if (playerInGame.length == 1)
             {
@@ -50,19 +62,24 @@ export const playerFolded = async (userId, roomId, io) => {
                     const data = await nextStage(room, roomId, io)
                     if (data.return == false)
                         return
-                    else 
+                    else
                         room = data.room
                 } else if (plyerOut.length < 2) {
                     await getWinner(room, roomId, io)
                     return
                 }
             }
-            room.playersTurn = nextPlayer(room)
+            if (playerInGame.length !== 1)
+                room.playersTurn = nextPlayer(room)
+            else
+                room.playersTurn = null
             await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
             io.to(roomId).emit('updatePlayers');
             if (playerInGame.length == 1)
             {
-                await startTheGame(roomId, io)
+                setTimeout(async () => {
+                    await startTheGame(roomId, io)
+                }, 2000)
                 return
             }
         }

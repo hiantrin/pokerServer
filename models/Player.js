@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 
-const handSchema = new mongoose.Schema({
+export const handSchema = new mongoose.Schema({
     suit: {
         type: String,
         required: true,

@@ -214,6 +214,9 @@ function bestCombination(userHand, communityCards) {
   export function getBestHandPlayers(players, communityCards) {
     let bestHands = [];
     let bestHand = null;
+    let winningCombination = null;
+    let winningCommunityCards = [];
+
     players.forEach(player => {
       const { userId, currentCards } = player;
       const currentHand = bestCombination(currentCards, communityCards);
@@ -222,12 +225,19 @@ function bestCombination(userHand, communityCards) {
       if (!bestHand || compareHands(currentHand, bestHand) > 0) {
         bestHand = currentHand;
         bestHands = [{ userId, hand: currentHand }];
+        winningCombination = currentHand.type;
+        winningCommunityCards = currentHand.ranks.slice(0, 3);
       } else if (compareHands(currentHand, bestHand) === 0) {
         bestHands.push({ userId, hand: currentHand });
       }
     });
   
-    return bestHands.map(player => player.userId);
+
+    return {
+      winningPlayers: bestHands.map(player => player.userId),
+      winningCombination,
+      winningCommunityCards,
+    }
   }
   
   // Test cases

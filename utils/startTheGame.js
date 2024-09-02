@@ -2,7 +2,6 @@ import mongoose from "mongoose";
 import { createDeck, shuffleDeck, dealCards, dealCommunityCards } from './deckUtils.js';
 import { setRoomState } from "./roomState.js";
 import PokerRoom from "../models/PokerRooms.js";
-import { getBestHandPlayers } from "./getWinners.js";
 import User from "../models/Users.js";
 import robotPlays from "./robot/robotPlays.js";
 
@@ -73,6 +72,7 @@ const createCardsPlayers = (room) => {
 		const communityCards = dealCommunityCards(deck);
 		room.communityCards = communityCards;
 		room.gameStarted = true
+		room.winner = null
 
 		room.playersData = hands.map((hand, index) => ({
 			userId: room.playersData[index].userId,
@@ -108,7 +108,8 @@ const initialGame = (room) => {
 	room.checking = false
 	room.gameRound = "preflop"
 	room.playersTurn = null,
-	room.playersData[0].robot = false
+	room.playersData[0].robot = false,
+	room.winner = null
 	return room
 }
 
@@ -133,7 +134,6 @@ const runListenerTurn = async (roomId, io) => {
 					robotPlays(room, index, io)
 				}
 				} else {
-					console.log("it's the player's turn");
 				}
             }
         }
