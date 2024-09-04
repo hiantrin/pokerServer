@@ -26,7 +26,7 @@ const launchTwoParty = async (room, roomId, io, userId) => {
         }, {new: true, runValidators: true} )
         setTimeout(async () => {
             await startTheGame(roomId, io)
-        }, 3000)
+        }, 5000)
     } catch (err) {
         return room
     }
@@ -79,7 +79,7 @@ export const playerFolded = async (userId, roomId, io) => {
             {
                 setTimeout(async () => {
                     await startTheGame(roomId, io)
-                }, 2000)
+                }, 5000)
                 return
             }
         }

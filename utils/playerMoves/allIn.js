@@ -18,6 +18,7 @@ export const getWinner = async (room, roomId, io) => {
             cardsCumminity: win.winningCommunityCards,
             typeWin: win.winningCombination
         }
+        console.log("cards winning ===> ", win.winningCommunityCards)
         let i = 0
         while (i < win.winningPlayers.length)
         {
@@ -29,7 +30,7 @@ export const getWinner = async (room, roomId, io) => {
         io.to(roomId).emit('updatePlayers');
         setTimeout(async () => {
             await startTheGame(roomId, io)
-        }, 2000)
+        }, 5000)
         return
     } catch (err) {
         return room

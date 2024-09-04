@@ -216,234 +216,58 @@ function bestCombination(userHand, communityCards) {
     let bestHand = null;
     let winningCombination = null;
     let winningCommunityCards = [];
-
+  
     players.forEach(player => {
       const { userId, currentCards } = player;
       const currentHand = bestCombination(currentCards, communityCards);
-  
   
       if (!bestHand || compareHands(currentHand, bestHand) > 0) {
         bestHand = currentHand;
         bestHands = [{ userId, hand: currentHand }];
         winningCombination = currentHand.type;
-        winningCommunityCards = currentHand.ranks.slice(0, 3);
+  
+        // Extract the exact community cards that form the winning combination
+        winningCommunityCards = extractWinningCommunityCards(currentHand, currentCards, communityCards);
       } else if (compareHands(currentHand, bestHand) === 0) {
         bestHands.push({ userId, hand: currentHand });
       }
     });
   
-
     return {
       winningPlayers: bestHands.map(player => player.userId),
       winningCombination,
-      winningCommunityCards,
-    }
+      winningCommunityCards, // Exact community cards that form the winning combination
+    };
   }
   
-  // Test cases
-  // const testCases = [
-  //   {
-  //     players: [
-  //       {
-  //         userId: 'player1',
-  //         hand: [
-  //           { suit: 'hearts', value: '2', color: 'red' },
-  //           { suit: 'diamonds', value: 'K', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player2',
-  //         hand: [
-  //           { suit: 'hearts', value: '10', color: 'red' },
-  //           { suit: 'hearts', value: 'J', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player3',
-  //         hand: [
-  //           { suit: 'spades', value: '9', color: 'black' },
-  //           { suit: 'spades', value: '8', color: 'black' }
-  //         ]
-  //       }
-  //     ],
-  //     communityCards: [
-  //       { suit: 'hearts', value: 'Q', color: 'red' },
-  //       { suit: 'hearts', value: 'K', color: 'red' },
-  //       { suit: 'hearts', value: 'A', color: 'red' },
-  //       { suit: 'clubs', value: '7', color: 'black' },
-  //       { suit: 'diamonds', value: '5', color: 'red' }
-  //     ],
-  //     expected: ['player2']
-  //   },
-  //   {
-  //     players: [
-  //       {
-  //         userId: 'player1',
-  //         hand: [
-  //           { suit: 'hearts', value: '3', color: 'red' },
-  //           { suit: 'diamonds', value: '3', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player2',
-  //         hand: [
-  //           { suit: 'hearts', value: '4', color: 'red' },
-  //           { suit: 'hearts', value: '4', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player3',
-  //         hand: [
-  //           { suit: 'spades', value: '5', color: 'black' },
-  //           { suit: 'spades', value: '5', color: 'black' }
-  //         ]
-  //       }
-  //     ],
-  //     communityCards: [
-  //       { suit: 'hearts', value: '6', color: 'red' },
-  //       { suit: 'hearts', value: '7', color: 'red' },
-  //       { suit: 'hearts', value: '8', color: 'red' },
-  //       { suit: 'hearts', value: '9', color: 'red' },
-  //       { suit: 'hearts', value: '10', color: 'red' }
-  //     ],
-  //     expected: ['player1']
-  //   },
-  //   {
-  //     players: [
-  //       {
-  //         userId: 'player1',
-  //         hand: [
-  //           { suit: 'hearts', value: 'Q', color: 'red' },
-  //           { suit: 'hearts', value: 'Q', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player2',
-  //         hand: [
-  //           { suit: 'spades', value: 'K', color: 'black' },
-  //           { suit: 'hearts', value: 'K', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player3',
-  //         hand: [
-  //           { suit: 'diamonds', value: 'A', color: 'red' },
-  //           { suit: 'clubs', value: 'A', color: 'black' }
-  //         ]
-  //       }
-  //     ],
-  //     communityCards: [
-  //       { suit: 'hearts', value: 'A', color: 'red' },
-  //       { suit: 'spades', value: 'A', color: 'black' },
-  //       { suit: 'clubs', value: 'K', color: 'black' },
-  //       { suit: 'diamonds', value: 'K', color: 'red' },
-  //       { suit: 'hearts', value: '2', color: 'red' }
-  //     ],
-  //     expected: ['player3']
-  //   },
-  //   {
-  //     players: [
-  //       {
-  //         userId: 'player1',
-  //         hand: [
-  //           { suit: 'hearts', value: '5', color: 'red' },
-  //           { suit: 'diamonds', value: '5', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player2',
-  //         hand: [
-  //           { suit: 'hearts', value: '6', color: 'red' },
-  //           { suit: 'hearts', value: '7', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player3',
-  //         hand: [
-  //           { suit: 'spades', value: '8', color: 'black' },
-  //           { suit: 'spades', value: '9', color: 'black' }
-  //         ]
-  //       }
-  //     ],
-  //     communityCards: [
-  //       { suit: 'hearts', value: '10', color: 'red' },
-  //       { suit: 'hearts', value: 'J', color: 'red' },
-  //       { suit: 'hearts', value: 'Q', color: 'red' },
-  //       { suit: 'hearts', value: 'K', color: 'red' },
-  //       { suit: 'hearts', value: 'A', color: 'red' }
-  //     ],
-  //     expected: ['player2']
-  //   },
-  //   {
-  //     players: [
-  //       {
-  //         userId: 'player1',
-  //         hand: [
-  //           { suit: 'hearts', value: '9', color: 'red' },
-  //           { suit: 'diamonds', value: '9', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player2',
-  //         hand: [
-  //           { suit: 'hearts', value: 'J', color: 'red' },
-  //           { suit: 'hearts', value: 'J', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player3',
-  //         hand: [
-  //           { suit: 'spades', value: 'Q', color: 'black' },
-  //           { suit: 'spades', value: 'Q', color: 'black' }
-  //         ]
-  //       }
-  //     ],
-  //     communityCards: [
-  //       { suit: 'hearts', value: 'K', color: 'red' },
-  //       { suit: 'hearts', value: 'Q', color: 'red' },
-  //       { suit: 'hearts', value: 'A', color: 'red' },
-  //       { suit: 'clubs', value: '10', color: 'black' },
-  //       { suit: 'diamonds', value: '8', color: 'red' }
-  //     ],
-  //     expected: ['player2']
-  //   },
-  //   {
-  //     players: [
-  //       {
-  //         userId: 'player1',
-  //         hand: [
-  //           { suit: 'hearts', value: '10', color: 'red' },
-  //           { suit: 'hearts', value: 'J', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player2',
-  //         hand: [
-  //           { suit: 'hearts', value: '10', color: 'red' },
-  //           { suit: 'hearts', value: 'J', color: 'red' }
-  //         ]
-  //       },
-  //       {
-  //         userId: 'player3',
-  //         hand: [
-  //           { suit: 'hearts', value: '10', color: 'red' },
-  //           { suit: 'hearts', value: 'J', color: 'red' }
-  //         ]
-  //       }
-  //     ],
-  //     communityCards: [
-  //       { suit: 'hearts', value: 'Q', color: 'red' },
-  //       { suit: 'hearts', value: 'K', color: 'red' },
-  //       { suit: 'hearts', value: 'A', color: 'red' },
-  //       { suit: 'hearts', value: '9', color: 'red' },
-  //       { suit: 'hearts', value: '8', color: 'red' }
-  //     ],
-  //     expected: ['player1', 'player2', 'player3']
-  //   }
-  // ];
+  // Helper function to extract the community cards that make the combination
+  function extractWinningCommunityCards(currentHand, playerHand, communityCards) {
+    const bestHandRanks = currentHand.ranks;
+    const communityCardRanks = communityCards.map(card => getCardRank(card));
   
-  // // Running the tests
-  // testCases.forEach((testCase, index) => {
-  //   const bestPlayers = getBestHandPlayers(testCase.players, testCase.communityCards);
-  //   console.log(`Test Case ${index + 1}: Expected ${JSON.stringify(testCase.expected)}, got ${JSON.stringify(bestPlayers)}`);
-  // });
+    // Extract the exact cards from community cards that make up the winning combination
+    const winningCommunityCards = [];
+    
+    bestHandRanks.forEach(rank => {
+      for (let i = 0; i < communityCards.length; i++) {
+        if (
+          communityCardRanks[i] === rank &&
+          !winningCommunityCards.includes(communityCards[i])
+        ) {
+          winningCommunityCards.push(communityCards[i]);
+          break;
+        }
+      }
+    });
+  
+    return winningCommunityCards; // Return all relevant community cards that make up the combination
+  }
+  
+  function getCardRank(card) {
+    const rankMap = {
+      '2': 2, '3': 3, '4': 4, '5': 5, '6': 6,
+      '7': 7, '8': 8, '9': 9, '10': 10,
+      'J': 11, 'Q': 12, 'K': 13, 'A': 14
+    };
+    return rankMap[card.value];
+  }
