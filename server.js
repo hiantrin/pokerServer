@@ -74,7 +74,7 @@ io.on('connection', (socket) => {
         try {
           const hasTwoPlayers = await checkToStartGame(room);
           if (hasTwoPlayers)
-            startTheGame(room, io, socket)
+            await startTheGame(room, io)
         } catch (error) {
           console.error('Error checking to start game:', error);
         }
@@ -140,7 +140,7 @@ io.on('connection', (socket) => {
     try {
       const hasTwoPlayers = await checkToStartGame(roomId);
       if (hasTwoPlayers)
-        startTheGame(roomId, io)
+        await startTheGame(roomId, io)
     } catch (error) {
       console.error('Error checking to start game:', error);
     }
@@ -150,7 +150,7 @@ io.on('connection', (socket) => {
   socket.on("kickRobot", async (data) => {
     const { roomId, robotId } = data
     try {
-      await quickRobot(roomId, robotId)
+        await quickRobot(roomId, robotId)
     } catch (err) {
       console.log(err)
     }

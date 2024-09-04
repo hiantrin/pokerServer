@@ -130,10 +130,12 @@ const runListenerTurn = async (roomId, io) => {
 				let index = room.playersData.findIndex((player) => player.userId == room.playersTurn);
 				// Determine if it's a robot's turn or a player's turn
 				if (room.playersData[index].robot === true) {
-				{
-					robotPlays(room, index, io)
-				}
+					setTimeout(async () => {
+						robotPlays(room, index, io)
+						io.to(room.roomId).emit('updatePlayers');
+					}, 3000)
 				} else {
+					
 				}
             }
         }
