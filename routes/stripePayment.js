@@ -111,7 +111,7 @@ const savePaymentToDatabase = async (paymentIntent) => {
   try {
     const user = await collection.findOne({_id : paymentIntent.metadata.userId})
     const howMuch = items.filter((item) => item.price == (paymentIntent.amount / 100))
-    const newUser = await collection.findByIdAndUpdate(user._id, {
+    const newUser = await User.findByIdAndUpdate(user._id, {
       $set : {gold: user.gold + howMuch[0].number}
     }, {new: true, runValidators: true})
     return res.status(200).send("success")
