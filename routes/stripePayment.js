@@ -7,10 +7,38 @@ import bodyParser from "body-parser";
 
 const router = express.Router();
 const db = mongoose.connection;
+const collection = db.collection('users');
 
 dotenv.config();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+const items = [
+  {
+    number: 10,
+    price: 1,
+  },
+  {
+    number: 60,
+    price: 5,
+  },
+  {
+    number: 140,
+    price: 9.99,
+  },
+  {
+    number: 300,
+    price: 19.99,
+  },
+  {
+    number: 800,
+    price: 49.99,
+  },
+  {
+    number: 2000,
+    price: 99.99
+  },
+];
 
 router.post(
   "/webhook",
@@ -79,7 +107,16 @@ router.post(
 );
 
 const savePaymentToDatabase = async (paymentIntent) => {
-  console.log("PaymentIntent", paymentIntent);
+  try {
+    const user = await collection.findOne({_id : paymentIntent.metadata.userId})
+    const howMuch = items.filter((item) => item.price == (paymentIntent.amount / 100))
+    const newUser = await collection.findByIdAndUpdate(user._id, {
+      $set : {gold: user.gold + howMuch[0].number}
+    }, {new: true, runValidators: true})
+    return res.status(200).send("success")
+  } catch (err) {
+    console.log(err)
+  }
 };
 
 export default router;
