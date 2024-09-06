@@ -4,6 +4,7 @@ import Stripe from "stripe";
 import checkToken from "../middlewares/checkToken.js";
 import dotenv from "dotenv";
 import bodyParser from "body-parser";
+import User from "../models/Users.js"
 
 const router = express.Router();
 const db = mongoose.connection;
