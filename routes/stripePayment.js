@@ -114,9 +114,10 @@ const savePaymentToDatabase = async (paymentIntent) => {
     const newUser = await User.findByIdAndUpdate(user._id, {
       $set : {gold: user.gold + howMuch[0].number}
     }, {new: true, runValidators: true})
-    return res.status(200).send("success")
+    return 
   } catch (err) {
     console.log(err)
+    return
   }
 };
 
