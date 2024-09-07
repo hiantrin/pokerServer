@@ -48,10 +48,10 @@ router.post(
     const sig = req.headers["stripe-signature"];
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    console.log(
-      "process.env.STRIPE_WEBHOOK_SECRET",
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    // console.log(
+    //   "process.env.STRIPE_WEBHOOK_SECRET",
+    //   process.env.STRIPE_WEBHOOK_SECRET
+    // );
     let event;
 
     try {
@@ -64,12 +64,12 @@ router.post(
       case "payment_intent.succeeded":
         const paymentIntent = event.data.object;
         savePaymentToDatabase(paymentIntent);
-        console.log("💰 PaymentIntent succeeded:", paymentIntent.id);
+        // console.log("💰 PaymentIntent succeeded:", paymentIntent.id);
         break;
 
       case "payment_intent.payment_failed":
         const failedPaymentIntent = event.data.object;
-        console.log("❌ PaymentIntent failed:", failedPaymentIntent.id);
+        // console.log("❌ PaymentIntent failed:", failedPaymentIntent.id);
         break;
 
       default:
@@ -116,7 +116,7 @@ const savePaymentToDatabase = async (paymentIntent) => {
     }, {new: true, runValidators: true})
     return 
   } catch (err) {
-    console.log(err)
+    // console.log(err)
     return
   }
 };
