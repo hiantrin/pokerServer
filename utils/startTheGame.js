@@ -4,6 +4,8 @@ import { setRoomState } from "./roomState.js";
 import PokerRoom from "../models/PokerRooms.js";
 import User from "../models/Users.js";
 import robotPlays from "./robot/robotPlays.js";
+import { playerFolded } from "./playerMoves/fold.js";
+import { checkMove } from "./playerMoves/check.js";
 
 
 const db = mongoose.connection
@@ -135,12 +137,56 @@ const runListenerTurn = async (roomId, io) => {
 						io.to(room.roomId).emit('updatePlayers');
 					}, 3000)
 				} else {
-					
+					// runInnerListener(room, room.roomId, io, room.playersTurn)
 				}
             }
         }
     });
 };
+
+// const playPlayersTurn = async (room, userId, io) => {
+// 	if (room.gameRound == "preflop")
+// 	{
+// 		await playerFolded(userId, room.roomId, io)
+// 	} else if (room.lastRaise == 0) {
+// 		await checkMove(userId, room.roomId, io)
+// 	} else {
+// 		await playerFolded(userId, room.roomId, io)
+// 	}
+// 	io.to(room.roomId).emit('updatePlayers');
+// }
+
+// const runInnerListener = (room, roomId, io, userId) => {
+//     const innerListener = PokerRoom.watch();
+//     let playerTurnChanged = false;
+
+//     // Set a timeout for 10 seconds
+//     const timeout = setTimeout( async () => {
+//         if (!playerTurnChanged) {
+//             console.log('10 seconds passed without playersTurn change');
+// 			await playPlayersTurn(room, userId, io)
+//             innerListener.close(); // Stop listening if no changes after 10 seconds
+//         }
+//     }, 10000);
+
+//     // Immediately listen for changes in playersTurn
+//     innerListener.on('change', async (innerChange) => {
+//         if (
+//             innerChange.operationType === 'update' &&
+//             innerChange.documentKey._id &&
+//             innerChange.updateDescription.updatedFields.hasOwnProperty('playersTurn')
+//         ) {
+//             const updatedRoom = await PokerRoom.findOne({ _id: innerChange.documentKey._id });
+
+//             if (updatedRoom && updatedRoom.roomId === roomId) {
+//                 playerTurnChanged = true;
+//                 clearTimeout(timeout); // Stop the timeout
+//                 console.log('playersTurn changed, exiting inner listener');
+//                 innerListener.close(); // Stop listening when the turn changes
+//             }
+//         }
+//     });
+// };
 
 
 const startTheGame = async (roomId, io) => {

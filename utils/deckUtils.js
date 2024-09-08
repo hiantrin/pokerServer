@@ -8,8 +8,10 @@ export function createDeck() {
   
     for (const suit of suits) {
       for (const value of values) {
-        deck.push({ suit, value, color: "black" });
-        deck.push({ suit, value, color: "red" });
+        if (suit == "hearts" || suit == "diamonds")
+          deck.push({ suit, value, color: "red" });
+        else
+          deck.push({ suit, value, color: "black" });
       }
     }
     return deck;
