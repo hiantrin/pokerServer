@@ -19,8 +19,11 @@ const robotPlays = async (room, index, io) => {
     if (allTheWay)
         await makeItFollow(room, io, index)
     else {
-        if (room.checked == true)
+        if (room.checking == true)
+        {
+            console.log("enter here")
             await checkMove(room.playersTurn, room.roomId, io)
+        }
         else if (room.lastRaise >= room.playersData[index].userShips / 4)
             await playerFolded(room.playersTurn, room.roomId, io)
         else if (room.gameRound !== "river")

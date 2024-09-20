@@ -6,7 +6,7 @@ const db = mongoose.connection
 const pokerRoomCollection = db.collection("pokerrooms")
 
 
-export const raiseAction = async (userId, amount, roomId) => {
+export const raiseAction = async (userId, amount, roomId, io) => {
     try {
       let room = await pokerRoomCollection.findOne({ roomId: roomId });
       if (!room || userId !== room.playersTurn)
@@ -32,7 +32,12 @@ export const raiseAction = async (userId, amount, roomId) => {
         }
   
       }
-      await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
+      const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+        { roomId: roomId }, // Filter
+        { $set: room }, // Update
+        { returnDocument: 'after', runValidators: true } // Options
+      );
+      io.to(roomId).emit('updatePlayers', myNewRoom);
       return
     } catch (err) {
       console.log(err)

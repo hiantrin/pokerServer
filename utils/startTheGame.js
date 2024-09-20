@@ -133,9 +133,8 @@ const runListenerTurn = async (roomId, io) => {
 				// Determine if it's a robot's turn or a player's turn
 				if (room.playersData[index].robot === true) {
 					setTimeout(async () => {
-						robotPlays(room, index, io)
-						io.to(room.roomId).emit('updatePlayers');
-					}, 3000)
+						await robotPlays(room, index, io)
+					}, 2000)
 				} else {
 					// runInnerListener(room, room.roomId, io, room.playersTurn)
 				}
@@ -215,15 +214,18 @@ const startTheGame = async (roomId, io) => {
 		room.gameRound = "preflop"
         if (room.players.length == 2 ) {
           room.playersTurn = room.players[0]
-        }
-        else 
+        } else 
           room.playersTurn = room.players[2]
-		  io.to(roomId).emit('startGame');
+		io.to(roomId).emit('startGame');
     } else {
 		room = initialGame(room)
 	}
-	await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
-	io.to(roomId).emit('updatePlayers');
+	const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+		{ roomId: roomId }, // Filter
+		{ $set: room }, // Update
+		{ returnDocument: 'after', runValidators: true } // Options
+	  );
+	io.to(roomId).emit('updatePlayers', myNewRoom);
   } catch (err) {
     console.error('Error finding the room:', err);
     return err

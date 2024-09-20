@@ -36,8 +36,12 @@ export const nextStage = async (room, roomId, io) => {
                 room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
                 i++
             }
-            await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : data.room });
-            io.to(roomId).emit('updatePlayers');
+            const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+                { roomId: roomId }, // Filter
+                { $set: room }, // Update
+                { returnDocument: 'after', runValidators: true } // Options
+              );
+            io.to(roomId).emit('updatePlayers', myNewRoom);
             setTimeout(async () => {
                 await startTheGame(roomId, io)
             }, 5000)
@@ -77,7 +81,12 @@ export const checkMove = async (userId, roomId, io) => {
             room = data.room
       }
       room.playersTurn = nextPlayer(room)
-      await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
+      const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+        { roomId: roomId }, // Filter
+        { $set: room }, // Update
+        { returnDocument: 'after', runValidators: true } // Options
+      );
+      io.to(roomId).emit('updatePlayers', myNewRoom);
       return
     } catch (err) {
       console.log(err)

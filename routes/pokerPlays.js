@@ -20,7 +20,7 @@ router.post("/sendText", checkToken, async (req, res) => {
     if (!room) {
       return res.status(404).send("Room or player not found");
     }
-    req.io.to(roomId).emit("updatePlayers");
+    req.io.to(roomId).emit("updatePlayers", room);
     res.status(200).send("nice one");
   } catch (err) {
     console.log(err);

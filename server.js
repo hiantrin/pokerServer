@@ -59,9 +59,7 @@ io.on("connection", (socket) => {
   // Handle 'login' event
   socket.on("joinRoom", async (room, player) => {
     socket.join(room);
-    console.log("the player ==>", player);
     if (player) {
-      console.log("it send socket");
       try {
         const hasTwoPlayers = await checkToStartGame(room);
         if (hasTwoPlayers) await startTheGame(room, io);
@@ -69,12 +67,10 @@ io.on("connection", (socket) => {
         console.error("Error checking to start game:", error);
       }
     }
-    io.to(room).emit("updatePlayers");
   });
 
   socket.on("leaveRoom", async (room) => {
     socket.leave(room);
-    io.to(room).emit("updatePlayers");
   });
 
   // sockets responsible for the game
@@ -82,7 +78,6 @@ io.on("connection", (socket) => {
     const { userId, roomId } = data;
     try {
       await callLastRaise(userId, roomId, io);
-      io.to(roomId).emit("updatePlayers");
     } catch (err) {
       console.error("Error starting the game:", err);
     }
@@ -91,8 +86,7 @@ io.on("connection", (socket) => {
   socket.on("raise", async (data) => {
     const { userId, amount, roomId } = data;
     try {
-      await raiseAction(userId, amount, roomId);
-      io.to(roomId).emit("updatePlayers");
+      await raiseAction(userId, amount, roomId, io);
     } catch (err) {
       console.log(err);
     }
@@ -101,7 +95,6 @@ io.on("connection", (socket) => {
   socket.on("fold", async (data) => {
     const { userId, roomId } = data;
     await playerFolded(userId, roomId, io);
-    io.to(roomId).emit("updatePlayers");
     io.to(roomId).emit("playerFolded", userId);
   });
 
@@ -109,7 +102,6 @@ io.on("connection", (socket) => {
     const { userId, roomId } = data;
     try {
       await checkMove(userId, roomId, io);
-      io.to(roomId).emit("updatePlayers");
     } catch (err) {
       console.error("Error starting the game:", err);
     }
@@ -119,7 +111,6 @@ io.on("connection", (socket) => {
     const { userId, roomId } = data;
     try {
       await allIn(userId, roomId, io);
-      io.to(roomId).emit("updatePlayers");
     } catch (err) {
       console.log(err);
     }
@@ -132,17 +123,15 @@ io.on("connection", (socket) => {
     } catch (error) {
       console.error("Error checking to start game:", error);
     }
-    io.to(roomId).emit("updatePlayers");
   });
 
   socket.on("kickRobot", async (data) => {
     const { roomId, robotId } = data;
     try {
-      await quickRobot(roomId, robotId);
+      await quickRobot(roomId, robotId, io);
     } catch (err) {
       console.log(err);
     }
-    io.to(roomId).emit("updatePlayers");
   });
 });
 

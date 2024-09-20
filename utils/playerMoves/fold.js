@@ -21,9 +21,10 @@ const launchTwoParty = async (room, roomId, io, userId) => {
             typeWin : "fold",
             cardsCumminity: null
         }
-        await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+        const myNewRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
             $set : {playersData: room.playersData, playersTurn: room.playersTurn, winner: room.winner}
-        }, {new: true, runValidators: true} )
+        }, { returnDocument: 'after', runValidators: true }  )
+        io.to(roomId).emit('updatePlayers', myNewRoom);
         setTimeout(async () => {
             await startTheGame(roomId, io)
         }, 5000)
@@ -73,8 +74,12 @@ export const playerFolded = async (userId, roomId, io) => {
                 room.playersTurn = nextPlayer(room)
             else
                 room.playersTurn = null
-            await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
-            io.to(roomId).emit('updatePlayers');
+                const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+                    { roomId: roomId }, // Filter
+                    { $set: room }, // Update
+                    { returnDocument: 'after', runValidators: true } // Options
+                  );
+            io.to(roomId).emit('updatePlayers', myNewRoom);
             if (playerInGame.length == 1)
             {
                 setTimeout(async () => {

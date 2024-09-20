@@ -21,7 +21,7 @@ const createRobotInfos = (userShips) => {
     return node
 }
 
-export const quickRobot = async (roomId, robotId) => {
+export const quickRobot = async (roomId, robotId, io) => {
     try {
         const room = await pokerRoomCollection.findOne({roomId: roomId})
         if (!room)
@@ -59,7 +59,12 @@ export const quickRobot = async (roomId, robotId) => {
             if (room.playersTurn == robotId)
                 room.playersTurn = nextPlayer(room)
         }
-        await pokerRoomCollection.updateOne({ roomId: roomId }, { $set : room });
+        const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+            { roomId: roomId }, // Filter
+            { $set: room }, // Update
+            { returnDocument: 'after', runValidators: true } // Options
+          );
+        io.to(roomId).emit("updatePlayers", myNewRoom);
         return room
     } catch (err) {
         console.log(err)
