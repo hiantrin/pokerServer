@@ -29,19 +29,21 @@ const createNode = (user, ships) => {
     return node
 }
 
-const createTable = async (value, userId, persons, user, ships, robot) => {
+const createTable = async (value, userId, persons, user, robot, smallBlind, bigBlind) => {
     try {
         const roomId = uuidv4()
         const players = [userId]
         const room = new PokerRoom({
             roomId,
             maxPlayers : persons,
-            buyIn : ships,
+            buyIn : value,
             players,
             full: false,
-            playersData: [createNode(user, ships)],
+            playersData: [createNode(user, value)],
             gameStarted: false,
-            robot: robot
+            robot: robot,
+            smallBlind: smallBlind,
+            bigBlind: bigBlind
         })
         const response = await room.save()
         return response.roomId
@@ -186,9 +188,12 @@ router.get("/getTableInfos", checkToken, async (req, res) => {
 })
 
 router.post("/createTable", checkToken, async (req, res) => {
-    const { value , persons , clubId, robot} = req.body
+    const { stakes, smallBlind, bigBlind, persons , clubId, robot} = req.body
 
-    if (!persons || value < 0  || value > 8 || (persons != 4 && persons != 6))
+    console.log(req.body)
+
+
+    if (!persons || stakes < 1000  || stakes > 10000000 || (persons != 4 && persons != 6))
         return res.status(405).send("check your Informations")
 
     try {
@@ -196,8 +201,11 @@ router.post("/createTable", checkToken, async (req, res) => {
         if (!user) {
             return res.status(405).send('User not found');
         }
-
-        const roomId = await createTable(value, req.userId, persons, user, 1000, robot);
+        if (user.ships < stakes)
+        {
+            return res.status(400).send('not enough money');
+        }
+        const roomId = await createTable(stakes, req.userId, persons, user, robot, smallBlind, bigBlind);
         if (!roomId) {
             return res.status(500).send('Error creating room');
         }
@@ -210,7 +218,7 @@ router.post("/createTable", checkToken, async (req, res) => {
             },  {new: true, runValidators: true})
         }
         const userRoom = await User.findByIdAndUpdate(req.userId, { 
-            $set: { roomId: roomId, ships: user.ships - 1000 } }, {new: true, runValidators: true} );
+            $set: { roomId: roomId, ships: user.ships - stakes } }, {new: true, runValidators: true} );
         if (!userRoom) {
             return res.status(404).send('User not found');
         }
@@ -229,7 +237,7 @@ router.post("/addRobot", checkToken, async (req, res) => {
         const myRobot = room.playersData.filter((item) => item.robot == true)
         if (myRobot.length !== 0)
             return res.status(400).send("robot already exist")
-        const robot = await createRobot(room, 1000)
+        const robot = await createRobot(room, room.buyIn)
         if (!robot)
             return res.status(400).send("sorry robot can't be created right now")
         res.status(200).send("success")
