@@ -6,7 +6,7 @@ const winnerSchema = new mongoose.Schema({
     userId : {
         type: String,
         required: true,
-        unique: true
+        unique: true,
     },
     cardsCumminity: {
         type: [handSchema],

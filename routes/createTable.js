@@ -43,12 +43,13 @@ const createTable = async (value, userId, persons, user, robot, smallBlind, bigB
             gameStarted: false,
             robot: robot,
             smallBlind: smallBlind,
-            bigBlind: bigBlind
+            bigBlind: bigBlind,
+            winner: null
         })
-        const response = await room.save()
-        return response.roomId
+        await pokerRoomCollection.insertOne(room)
+        return roomId
     } catch (err) {
-        console.log(err)
+        console.log("my fucking error ===>", err)
         return null
     }
 }
@@ -189,9 +190,6 @@ router.get("/getTableInfos", checkToken, async (req, res) => {
 
 router.post("/createTable", checkToken, async (req, res) => {
     const { stakes, smallBlind, bigBlind, persons , clubId, robot} = req.body
-
-    console.log(req.body)
-
 
     if (!persons || stakes < 1000  || stakes > 10000000 || (persons != 4 && persons != 6))
         return res.status(405).send("check your Informations")
