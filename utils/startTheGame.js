@@ -136,7 +136,6 @@ const runListenerTurn = async (roomId, io) => {
                         await robotPlays(room, index, io);
                     }, 3000);
                 } else {
-                    // Start the player turn logic with a timeout
                     handlePlayerTurnTimeout(room, roomId, io, room.playersTurn);
                 }
             }

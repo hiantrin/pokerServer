@@ -29,7 +29,7 @@ const createNode = (user, ships) => {
     return node
 }
 
-const createTable = async (value, userId, persons, user, robot, smallBlind, bigBlind) => {
+const createTable = async (value, userId, persons, user, robot, smallBlind, bigBlind, parameters) => {
     try {
         const roomId = uuidv4()
         const players = [userId]
@@ -44,7 +44,8 @@ const createTable = async (value, userId, persons, user, robot, smallBlind, bigB
             robot: robot,
             smallBlind: smallBlind,
             bigBlind: bigBlind,
-            winner: null
+            winner: null,
+            parameters: parameters
         })
         await pokerRoomCollection.insertOne(room)
         return roomId
@@ -189,7 +190,7 @@ router.get("/getTableInfos", checkToken, async (req, res) => {
 })
 
 router.post("/createTable", checkToken, async (req, res) => {
-    const { stakes, smallBlind, bigBlind, persons , clubId, robot} = req.body
+    const {parameters, stakes, smallBlind, bigBlind, persons , clubId, robot} = req.body
 
     if (!persons || stakes < 1000  || stakes > 10000000 || (persons != 4 && persons != 6))
         return res.status(405).send("check your Informations")
@@ -203,7 +204,7 @@ router.post("/createTable", checkToken, async (req, res) => {
         {
             return res.status(400).send('not enough money');
         }
-        const roomId = await createTable(stakes, req.userId, persons, user, robot, smallBlind, bigBlind);
+        const roomId = await createTable(stakes, req.userId, persons, user, robot, smallBlind, bigBlind, parameters);
         if (!roomId) {
             return res.status(500).send('Error creating room');
         }

@@ -18,6 +18,32 @@ const winnerSchema = new mongoose.Schema({
     }
 })
 
+const parametersSchema = new mongoose.Schema({
+    gameType: {
+        type: String,
+        required: true,
+    },
+    gameLength: {
+        type: Number,
+        required : true,
+    },
+    gameAuction: {
+        type: Number,
+        required: true,
+    },
+    tax: {
+        type: Number,
+        required: true,
+    },
+    playTwice: {
+        type: Boolean,
+        required: true,
+    },
+    randomSets: {
+        type: Boolean,
+        required: true
+    }
+})
 
 const pokerRoomSchema = new mongoose.Schema({
     roomId : {
@@ -97,6 +123,10 @@ const pokerRoomSchema = new mongoose.Schema({
     winner : {
         type: winnerSchema,
         default : null
+    },
+    parameters : {
+        type: parametersSchema,
+        default: null
     }
 })
 
