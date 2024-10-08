@@ -7,6 +7,7 @@ const winnerSchema = new mongoose.Schema({
         type: String,
         required: true,
         unique: true,
+        default: ''
     },
     cardsCumminity: {
         type: [handSchema],
