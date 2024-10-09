@@ -176,6 +176,7 @@ const createCardsPlayers = (room) => {
 		room.communityCards = communityCards;
 		room.gameStarted = true
 		room.winner = null
+		room.lastPlayerMove = null
 
 		room.playersData = hands.map((hand, index) => ({
 			userId: room.playersData[index].userId,
@@ -212,7 +213,8 @@ const initialGame = (room) => {
 	room.gameRound = "preflop"
 	room.playersTurn = null,
 	room.playersData[0].robot = false,
-	room.winner = null
+	room.winner = null,
+	room.lastPlayerMove = null
 	return room
 }
 
@@ -224,7 +226,6 @@ const startTheGame = async (roomId, io) => {
   try {
 	let room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }))
     if (room && room.playersData.length >= 2) {
-		// runListenerTurn(roomId, io)
 		room = createCardsPlayers(room)
 		let i = 0;
 		while (i < room.playersData.length)
@@ -257,8 +258,6 @@ const startTheGame = async (roomId, io) => {
 		{ $set: room }, // Update
 		{ returnDocument: 'after', runValidators: true } // Options
 	  );
-	// if (room && room.playersData.length >= 2)
-	// 	runListenerTurn(roomId, io, myNewRoom)
 	checkWhoIsNext(room, io)
 	io.to(roomId).emit('updatePlayers', myNewRoom);
   } catch (err) {

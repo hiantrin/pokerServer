@@ -14,6 +14,10 @@ export const raiseAction = async (userId, amount, roomId, io) => {
       let index = room.playersData.findIndex(player => player.userId === userId);
       room.paud = amount +  room.paud
       room.playersData[index].userShips = room.playersData[index].userShips - amount
+      room.lastPlayerMove = {
+        userId : userId,
+        playerMove : `Raise ${amount}`
+      }
       if (room.lastRaise == room.playersData[index].bet)
         room.lastRaise = room.lastRaise + amount
       else 

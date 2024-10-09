@@ -18,6 +18,10 @@ export const callLastRaise = async (userId, roomId, io) => {
         room.paud = (room.lastRaise - room.playersData[index].bet) +  room.paud 
         room.playersData[index].userShips = room.playersData[index].userShips - (room.lastRaise - room.playersData[index].bet)
         room.playersData[index].bet = room.lastRaise
+        room.lastPlayerMove = {
+            userId : userId,
+            playerMove : "Call"
+        }
         if (checkIfAllOut(userId, room, index))
         {
             await getWinner(room, roomId, io)

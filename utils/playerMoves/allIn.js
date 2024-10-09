@@ -12,6 +12,7 @@ export const getWinner = async (room, roomId, io) => {
     try {
         room.gameRound = "river"
         room.playersTurn = null
+        room.lastPlayerMove = null
         const win  = getBestHandPlayers(room.playersData.filter((item) => item.inTheGame), room.communityCards)
         room.winner = {
             userId: win.winningPlayers[0],
@@ -52,6 +53,10 @@ export const allIn = async (userId, roomId, io) => {
 		room.paud = room.paud + room.playersData[index].userShips
         room.playersData[index].userShips = 0
         room.playersData[index].bet = room.playersData[index].bet + room.playersData[index].userShips
+        room.lastPlayerMove = {
+            userId : userId,
+            playerMove : "All in"
+        }
         if (room.lastRaise < room.playersData[index].bet)
             room.lastRaise = room.playersData[index].bet
         else {

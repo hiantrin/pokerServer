@@ -19,6 +19,17 @@ const winnerSchema = new mongoose.Schema({
     }
 })
 
+const userPlaySchema = new mongoose.Schema({
+    userId: {
+        type: String,
+        required: true,
+    },
+    playerMove : {
+        type: String,
+        required: true
+    }
+})
+
 const parametersSchema = new mongoose.Schema({
     gameType: {
         type: String,
@@ -128,6 +139,10 @@ const pokerRoomSchema = new mongoose.Schema({
     parameters : {
         type: parametersSchema,
         default: null
+    },
+    lastPlayerMove : {
+        type: userPlaySchema,
+        default : null
     }
 })
 

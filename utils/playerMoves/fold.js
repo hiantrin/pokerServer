@@ -21,6 +21,7 @@ const launchTwoParty = async (room, roomId, io, userId) => {
             typeWin : "fold",
             cardsCumminity: null
         }
+        room.lastPlayerMove = null
         const myNewRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
             $set : {playersData: room.playersData, playersTurn: room.playersTurn, winner: room.winner}
         }, { returnDocument: 'after', runValidators: true }  )
@@ -48,6 +49,10 @@ export const playerFolded = async (userId, roomId, io) => {
             let i = room.playersData.findIndex(player => player.userId === userId);
             room.playersData[i].inTheGame = false
             room.playersData[i].bet = 0
+            room.lastPlayerMove = {
+                userId : userId,
+                playerMove : "Fold"
+            }
             const playerInGame = room.playersData.filter((item) => item.inTheGame == true)
             if (playerInGame.length == 1)
             {
