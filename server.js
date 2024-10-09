@@ -32,7 +32,11 @@ const io = new SocketServer(server, {
   },
 });
 
-mongoose.connect(process.env.MONGO_URL);
+mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  retryWrites: true,
+});;
 
 const db = mongoose.connection;
 db.on("error", (error) => console.error("database error", error));

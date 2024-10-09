@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import startTheGame from "../startTheGame.js";
+import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import { nextStage } from "./check.js";
 import { getWinner } from "./allIn.js";
@@ -74,11 +74,12 @@ export const playerFolded = async (userId, roomId, io) => {
                 room.playersTurn = nextPlayer(room)
             else
                 room.playersTurn = null
-                const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
-                    { roomId: roomId }, // Filter
-                    { $set: room }, // Update
-                    { returnDocument: 'after', runValidators: true } // Options
-                  );
+            const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+                { roomId: roomId }, // Filter
+                { $set: room }, // Update
+                { returnDocument: 'after', runValidators: true } // Options
+            );
+            checkWhoIsNext(myNewRoom, io)
             io.to(roomId).emit('updatePlayers', myNewRoom);
             if (playerInGame.length == 1)
             {

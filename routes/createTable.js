@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import PokerRoom from "../models/PokerRooms.js";
 import User from "../models/Users.js";
 import Club from "../models/Club.js";
-import { nextPlayer } from "../utils/startTheGame.js";
+import { checkWhoIsNext, nextPlayer } from "../utils/startTheGame.js";
 import createRobot from "../utils/robot/createRobot.js";
 
 const router = express.Router()
@@ -56,6 +56,8 @@ const createTable = async (value, userId, persons, user, robot, smallBlind, bigB
 }
 
 router.patch("/quitTable", checkToken, async (req, res) => {
+    const io = req.io;
+
     try {
         const oldUser = await collection.findOne({ _id: req.userId });
         if (!oldUser)
@@ -99,7 +101,12 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             if (room.playersTurn == req.userId)
                 room.playersTurn = nextPlayer(room)
         }
-        await pokerRoomCollection.updateOne({ roomId: req.body.roomId }, { $set : room });
+        const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+            { roomId: req.body.roomId }, // Filter
+            { $set: room }, // Update
+            { returnDocument: 'after', runValidators: true } // Options
+          );
+        checkWhoIsNext(myNewRoom, io)
         res.status(200).send(user)
     } catch (err) {
         res.status(400).send("Internal server Error")

@@ -1,5 +1,5 @@
 import { getBestHandPlayers } from "../getWinners.js";
-import startTheGame from "../startTheGame.js";
+import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import mongoose from "mongoose";
 
@@ -71,7 +71,7 @@ export const checkMove = async (userId, roomId, io) => {
         return
       let index = room.playersData.findIndex(player => player.userId === userId);
       room.playersData[index].checked = true
-      const playersDontChecked = room.playersData.filter((item) => item.checked == false)
+      const playersDontChecked = room.playersData.filter((item) => item.inTheGame && item.userShips !== 0 && item.checked == false)
       if (playersDontChecked.length == 0)
       {
         const data = await nextStage(room, roomId, io)
@@ -86,6 +86,7 @@ export const checkMove = async (userId, roomId, io) => {
         { $set: room }, // Update
         { returnDocument: 'after', runValidators: true } // Options
       );
+      checkWhoIsNext(myNewRoom, io)
       io.to(roomId).emit('updatePlayers', myNewRoom);
       return
     } catch (err) {

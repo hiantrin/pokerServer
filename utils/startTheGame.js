@@ -12,6 +12,107 @@ const db = mongoose.connection
 
 const pokerRoomCollection = db.collection("pokerrooms")
 
+// const runListenerTurn = async (roomId, io) => {
+//     const pokerRoomsChangeStream = PokerRoom.watch();
+    
+//     pokerRoomsChangeStream.on('change', async (change) => {
+//         if (
+//             change.operationType === 'update' &&
+//             change.documentKey._id &&
+//             change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
+//         ) {
+//             console.log("playersTurn updated");
+//             const room = await PokerRoom.findOne({ _id: change.documentKey._id });
+            
+//             if (room && room.playersTurn !== null && room.roomId === roomId) {
+//                 let index = room.playersData.findIndex((player) => player.userId == room.playersTurn);
+
+//                 // If it's a robot's turn
+//                 if (room.playersData[index].robot === true) {
+//                     setTimeout(async () => {
+//                         await robotPlays(room, index, io);
+//                     }, 3000);
+//                 } else {
+//                     handlePlayerTurnTimeout(room, roomId, io, room.playersTurn);
+//                 }
+//             }
+//         }
+
+//         if (
+//             change.operationType === 'update' &&
+//             change.documentKey._id &&
+//             change.updateDescription.updatedFields.hasOwnProperty('winner')
+//         ) {
+//             console.log("winner closed");
+//             const room = await PokerRoom.findOne({ _id: change.documentKey._id });
+//             if (room.roomId === roomId && room.winner !== null) {
+//                 await pokerRoomsChangeStream.close();
+//             }
+//         }
+//     });
+// };
+
+const handlePlayerTurnTimeout = async (room, roomId, io, userId) => {
+    let playerTurnChanged = false;
+
+    // Set a timeout for 10 seconds
+    const timeout = setTimeout(async () => {
+        if (!playerTurnChanged) {
+            console.log('5 seconds passed without playersTurn change');
+			await pokerRoomsChangeStream.close();
+			setTimeout(async () => {
+				await playPlayersTurn(room, userId, io); // Make the move on behalf of the player
+			}, 1000)
+			return
+        }
+    }, 10000);
+
+    // Listen for any further changes in playersTurn
+    const pokerRoomsChangeStream = PokerRoom.watch();
+
+    pokerRoomsChangeStream.on('change', async (change) => {
+        if (
+            change.operationType === 'update' &&
+            change.documentKey._id &&
+            change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
+        ) {
+			console.log("second listener")
+            const updatedRoom = await PokerRoom.findOne({ _id: change.documentKey._id });
+
+            if (updatedRoom && updatedRoom.roomId === roomId) {
+                playerTurnChanged = true;
+                clearTimeout(timeout); // Clear the timeout when turn changes
+                await pokerRoomsChangeStream.close(); // Close the change stream to prevent memory leak
+            }
+        }
+    });
+};
+
+// Play player move based on game round logic
+const playPlayersTurn = async (room, userId, io) => {
+    if (room.gameRound === 'preflop') {
+        await playerFolded(userId, room.roomId, io);
+    } else if (room.lastRaise === 0) {
+        await checkMove(userId, room.roomId, io);
+    } else {
+        await playerFolded(userId, room.roomId, io);
+    }
+    io.to(room.roomId).emit('updatePlayers');
+};
+
+
+
+export const checkWhoIsNext = (room, io) => {
+	let index = room.playersData.findIndex((player) => player.userId == room.playersTurn);
+	if (room.playersData[index].robot === true) {
+		setTimeout(async () => {
+			await robotPlays(room, index, io);
+		}, 3000);
+	} else {
+		handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
+	}
+}
+
 export const nextPlayer = (room) => {
   let index = room.players.findIndex(player => player === room.playersTurn);
   const part1 = room.players.slice(index);
@@ -116,98 +217,14 @@ const initialGame = (room) => {
 }
 
 
-const runListenerTurn = async (roomId, io) => {
-    const pokerRoomsChangeStream = PokerRoom.watch();
-    
-    pokerRoomsChangeStream.on('change', async (change) => {
-        if (
-            change.operationType === 'update' &&
-            change.documentKey._id &&
-            change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
-        ) {
-            console.log("playersTurn updated");
-            const room = await PokerRoom.findOne({ _id: change.documentKey._id });
-            
-            if (room && room.playersTurn !== null && room.roomId === roomId) {
-                let index = room.playersData.findIndex((player) => player.userId == room.playersTurn);
 
-                // If it's a robot's turn
-                if (room.playersData[index].robot === true) {
-                    setTimeout(async () => {
-                        await robotPlays(room, index, io);
-                    }, 3000);
-                } else {
-                    handlePlayerTurnTimeout(room, roomId, io, room.playersTurn);
-                }
-            }
-        }
-
-        if (
-            change.operationType === 'update' &&
-            change.documentKey._id &&
-            change.updateDescription.updatedFields.hasOwnProperty('winner')
-        ) {
-            console.log("winner closed");
-            const room = await PokerRoom.findOne({ _id: change.documentKey._id });
-            if (room.roomId === roomId && room.winner !== null) {
-                await pokerRoomsChangeStream.close();
-            }
-        }
-    });
-};
-
-const handlePlayerTurnTimeout = async (room, roomId, io, userId) => {
-    let playerTurnChanged = false;
-
-    // Set a timeout for 10 seconds
-    const timeout = setTimeout(async () => {
-        if (!playerTurnChanged) {
-            console.log('5 seconds passed without playersTurn change');
-			await pokerRoomsChangeStream.close();
-            await playPlayersTurn(room, userId, io); // Make the move on behalf of the player
-			return
-        }
-    }, 10000);
-
-    // Listen for any further changes in playersTurn
-    const pokerRoomsChangeStream = PokerRoom.watch();
-
-    pokerRoomsChangeStream.on('change', async (change) => {
-        if (
-            change.operationType === 'update' &&
-            change.documentKey._id &&
-            change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
-        ) {
-			console.log("second listener")
-            const updatedRoom = await PokerRoom.findOne({ _id: change.documentKey._id });
-
-            if (updatedRoom && updatedRoom.roomId === roomId) {
-                playerTurnChanged = true;
-                clearTimeout(timeout); // Clear the timeout when turn changes
-                await pokerRoomsChangeStream.close(); // Close the change stream to prevent memory leak
-            }
-        }
-    });
-};
-
-// Play player move based on game round logic
-const playPlayersTurn = async (room, userId, io) => {
-    if (room.gameRound === 'preflop') {
-        await playerFolded(userId, room.roomId, io);
-    } else if (room.lastRaise === 0) {
-        await checkMove(userId, room.roomId, io);
-    } else {
-        await playerFolded(userId, room.roomId, io);
-    }
-    io.to(room.roomId).emit('updatePlayers');
-};
 
 
 const startTheGame = async (roomId, io) => {
   try {
 	let room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }))
     if (room && room.playersData.length >= 2) {
-		runListenerTurn(roomId, io)
+		// runListenerTurn(roomId, io)
 		room = createCardsPlayers(room)
 		let i = 0;
 		while (i < room.playersData.length)
@@ -242,6 +259,7 @@ const startTheGame = async (roomId, io) => {
 	  );
 	// if (room && room.playersData.length >= 2)
 	// 	runListenerTurn(roomId, io, myNewRoom)
+	checkWhoIsNext(room, io)
 	io.to(roomId).emit('updatePlayers', myNewRoom);
   } catch (err) {
     console.error('Error finding the room:', err);

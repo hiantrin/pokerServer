@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { nextPlayer } from "../startTheGame.js";
+import { checkWhoIsNext, nextPlayer } from "../startTheGame.js";
 
 const db = mongoose.connection
 
@@ -37,6 +37,7 @@ export const raiseAction = async (userId, amount, roomId, io) => {
         { $set: room }, // Update
         { returnDocument: 'after', runValidators: true } // Options
       );
+      checkWhoIsNext(myNewRoom, io)
       io.to(roomId).emit('updatePlayers', myNewRoom);
       return
     } catch (err) {

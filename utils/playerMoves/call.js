@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { checkIfAllOut } from "../startTheGame.js";
+import { checkIfAllOut, checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import { getWinner } from "./allIn.js";
 import { nextStage } from "./check.js";
@@ -38,6 +38,7 @@ export const callLastRaise = async (userId, roomId, io) => {
             { $set: room }, // Update
             { returnDocument: 'after', runValidators: true } // Options
           );
+        checkWhoIsNext(myNewRoom, io)
         io.to(roomId).emit('updatePlayers', myNewRoom);
         return
     } catch (err) {

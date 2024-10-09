@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { getBestHandPlayers } from "../getWinners.js";
-import startTheGame from "../startTheGame.js";
+import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import { nextStage } from "./check.js";
 
@@ -76,6 +76,7 @@ export const allIn = async (userId, roomId, io) => {
             { $set: room }, // Update
             { returnDocument: 'after', runValidators: true } // Options
           );
+        checkWhoIsNext(myNewRoom, io)
         io.to(roomId).emit('updatePlayers', myNewRoom);
         return
 	} catch (err) {
