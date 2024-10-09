@@ -97,7 +97,6 @@ const playPlayersTurn = async (room, userId, io) => {
     } else {
         await playerFolded(userId, room.roomId, io);
     }
-    io.to(room.roomId).emit('updatePlayers');
 };
 
 

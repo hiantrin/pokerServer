@@ -96,6 +96,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             room.playersData[0].userShips = room.playersData[0].userShips + room.paud
             room.paud = 0
             room.playersTurn = null
+            room.lastPlayerMove = null
         }
         else {
             if (room.playersTurn == req.userId)
@@ -107,6 +108,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             { returnDocument: 'after', runValidators: true } // Options
           );
         checkWhoIsNext(myNewRoom, io)
+        io.to(myNewRoom.roomId).emit('updatePlayers', myNewRoom);
         res.status(200).send(user)
     } catch (err) {
         res.status(400).send("Internal server Error")

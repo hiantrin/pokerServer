@@ -84,7 +84,8 @@ export const playerFolded = async (userId, roomId, io) => {
                 { $set: room }, // Update
                 { returnDocument: 'after', runValidators: true } // Options
             );
-            checkWhoIsNext(myNewRoom, io)
+            if (playerInGame.length !== 1)
+                checkWhoIsNext(myNewRoom, io)
             io.to(roomId).emit('updatePlayers', myNewRoom);
             if (playerInGame.length == 1)
             {
