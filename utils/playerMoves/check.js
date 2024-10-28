@@ -2,6 +2,7 @@ import { getBestHandPlayers } from "../getWinners.js";
 import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import mongoose from "mongoose";
+import { saveAndMove } from "./call.js";
 
 const db = mongoose.connection
 
@@ -22,29 +23,33 @@ export const nextStage = async (room, roomId, io) => {
         else if (data.room.gameRound == "river")
         {
             room.playersTurn = null
-            const win  = getBestHandPlayers(data.room.playersData.filter((item) => item.inTheGame), data.room.communityCards)
-            room.winner = {
-                userId: win.winningPlayers[0],
-                cardsCumminity: win.winningCommunityCards,
-                typeWin: win.winningCombination
-            }
-            console.log("cards winning ===> ", win.winningCommunityCards)
-            let i = 0
-            while (i < win.winningPlayers.length)
-            {
-                let myIndex = room.playersData.findIndex(player => player.userId === win.winningPlayers[i]);
-                room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
-                i++
-            }
-            const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
-                { roomId: roomId }, // Filter
-                { $set: room }, // Update
-                { returnDocument: 'after', runValidators: true } // Options
-              );
-            io.to(roomId).emit('updatePlayers', myNewRoom);
+            await saveAndMove(roomId, room, io)
             setTimeout(async () => {
-                await startTheGame(roomId, io)
-            }, 5000)
+                room.playersTurn = null
+                room.lastPlayerMove = null
+                const win  = getBestHandPlayers(data.room.playersData.filter((item) => item.inTheGame), data.room.communityCards)
+                room.winner = {
+                    userId: win.winningPlayers[0],
+                    cardsCumminity: win.winningCommunityCards,
+                    typeWin: win.winningCombination
+                }
+                let i = 0
+                while (i < win.winningPlayers.length)
+                {
+                    let myIndex = room.playersData.findIndex(player => player.userId === win.winningPlayers[i]);
+                    room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
+                    i++
+                }
+                const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+                    { roomId: roomId }, // Filter
+                    { $set: room }, // Update
+                    { returnDocument: 'after', runValidators: true } // Options
+                );
+                io.to(roomId).emit('updatePlayers', myNewRoom);
+                setTimeout(async () => {
+                    await startTheGame(roomId, io)
+                }, 3000)
+            }, 2000)
             data.return = false
             return data
         }

@@ -3,6 +3,7 @@ import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import { nextStage } from "./check.js";
 import { getWinner } from "./allIn.js";
+import { saveAndMove } from "./call.js";
 
 const db = mongoose.connection
 
@@ -21,14 +22,19 @@ const launchTwoParty = async (room, roomId, io, userId) => {
             typeWin : "fold",
             cardsCumminity: null
         }
-        room.lastPlayerMove = null
-        const myNewRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-            $set : {playersData: room.playersData, playersTurn: room.playersTurn, winner: room.winner}
-        }, { returnDocument: 'after', runValidators: true }  )
+        room.lastPlayerMove = {
+            userId : userId,
+            playerMove : "Fold"
+        }
+        const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+            { roomId: roomId }, // Filter
+            { $set: room }, // Update
+            { returnDocument: 'after', runValidators: true } // Options
+          );
         io.to(roomId).emit('updatePlayers', myNewRoom);
         setTimeout(async () => {
             await startTheGame(roomId, io)
-        }, 5000)
+        }, 3000)
     } catch (err) {
         return room
     }
@@ -42,6 +48,7 @@ export const playerFolded = async (userId, roomId, io) => {
             return
     
         if (room.players.length == 2) {
+            console.log("it folded here")
             await launchTwoParty(room, roomId, io, userId)
             return
         }
@@ -71,7 +78,11 @@ export const playerFolded = async (userId, roomId, io) => {
                     else
                         room = data.room
                 } else if (plyerOut.length < 2) {
-                    await getWinner(room, roomId, io)
+                    room.playersTurn = null
+                    await saveAndMove(roomId, room, io)
+                    setTimeout(async () => {
+                        await getWinner(room, roomId, io)
+                    }, 2000)
                     return
                 }
             }
@@ -91,7 +102,7 @@ export const playerFolded = async (userId, roomId, io) => {
             {
                 setTimeout(async () => {
                     await startTheGame(roomId, io)
-                }, 5000)
+                }, 3000)
                 return
             }
         }

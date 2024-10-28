@@ -3,6 +3,7 @@ import { getBestHandPlayers } from "../getWinners.js";
 import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import { nextStage } from "./check.js";
+import { saveAndMove } from "./call.js";
 
 const db = mongoose.connection
 
@@ -19,7 +20,6 @@ export const getWinner = async (room, roomId, io) => {
             cardsCumminity: win.winningCommunityCards,
             typeWin: win.winningCombination
         }
-        console.log("cards winning ===> ", win.winningCommunityCards)
         let i = 0
         while (i < win.winningPlayers.length)
         {
@@ -35,7 +35,7 @@ export const getWinner = async (room, roomId, io) => {
         io.to(roomId).emit('updatePlayers', myNewRoom);
         setTimeout(async () => {
             await startTheGame(roomId, io)
-        }, 5000)
+        }, 3000)
         return
     } catch (err) {
         return room
@@ -64,7 +64,11 @@ export const allIn = async (userId, roomId, io) => {
             const finishedPlayers = otherPlayers.filter((item) => item.userShips > 0 && item.inTheGame )
             const allbet = otherPlayers.filter((item) => item.bet !== room.lastRaise)
             if (finishedPlayers.length == 0) {
-                await getWinner(room, roomId, io)
+                room.playersTurn = null
+                await saveAndMove(roomId, room, io)
+                setTimeout(async () => {
+                    await getWinner(room, roomId, io)
+                }, 2000)
                 return
             } else if (allbet.length == 0) {
                 const data = await nextStage(room, roomId, io)

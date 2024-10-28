@@ -58,7 +58,6 @@ const handlePlayerTurnTimeout = async (room, roomId, io, userId) => {
     // Set a timeout for 10 seconds
     const timeout = setTimeout(async () => {
         if (!playerTurnChanged) {
-            console.log('5 seconds passed without playersTurn change');
 			await pokerRoomsChangeStream.close();
 			setTimeout(async () => {
 				await playPlayersTurn(room, userId, io); // Make the move on behalf of the player
@@ -76,7 +75,6 @@ const handlePlayerTurnTimeout = async (room, roomId, io, userId) => {
             change.documentKey._id &&
             change.updateDescription.updatedFields.hasOwnProperty('playersTurn')
         ) {
-			console.log("second listener")
             const updatedRoom = await PokerRoom.findOne({ _id: change.documentKey._id });
 
             if (updatedRoom && updatedRoom.roomId === roomId) {

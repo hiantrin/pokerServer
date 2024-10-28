@@ -9,6 +9,21 @@ const db = mongoose.connection
 const pokerRoomCollection = db.collection("pokerrooms")
 
 
+export const saveAndMove = async (roomId, room, io) => {
+    try {
+        const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+            { roomId: roomId }, // Filter
+            { $set: room }, // Update
+            { returnDocument: 'after', runValidators: true } // Options
+          );
+        io.to(roomId).emit('updatePlayers', myNewRoom);
+        return true
+    } catch (err) {
+        console.log(err)
+        return false
+    }
+}
+
 export const callLastRaise = async (userId, roomId, io) => {
     try {
         let room = await pokerRoomCollection.findOne({ roomId: roomId });
@@ -24,7 +39,11 @@ export const callLastRaise = async (userId, roomId, io) => {
         }
         if (checkIfAllOut(userId, room, index))
         {
-            await getWinner(room, roomId, io)
+            room.playersTurn = null
+            await saveAndMove(roomId, room, io)
+            setTimeout(async () => {
+                await getWinner(room, roomId, io)
+            }, 2000)
             return
         }
         const check = room.playersData.filter((item) => item.bet !== room.lastRaise && item.inTheGame)
