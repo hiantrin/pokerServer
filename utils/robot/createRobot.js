@@ -17,7 +17,8 @@ const createRobotInfos = (userShips) => {
         avatar: null,
         avatar64: null,
         inTheGame: false,
-        robot : true
+        robot : true,
+        set : 6
     }
     return node
 }

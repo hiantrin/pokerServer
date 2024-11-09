@@ -14,7 +14,7 @@ const collection = db.collection('users');
 const pokerRoomCollection = db.collection("pokerrooms")
 const clubCollection = db.collection("clubs")
 
-const createNode = (user, ships) => {
+const createNode = (user, ships, set) => {
     const node = {
         userId : user._id,
         username: user.username,
@@ -24,7 +24,8 @@ const createNode = (user, ships) => {
         avatar: user.avatar,
         avatar64: user.avatar64,
         inTheGame: false,
-        robot: false
+        robot: false,
+        set : set
     }
     return node
 }
@@ -39,13 +40,13 @@ const createTable = async (value, userId, persons, user, robot, smallBlind, bigB
             buyIn : value,
             players,
             full: false,
-            playersData: [createNode(user, value)],
+            playersData: [createNode(user, value, persons == 2 ? 2 : 1)],
             gameStarted: false,
             robot: robot,
             smallBlind: smallBlind,
             bigBlind: bigBlind,
             winner: null,
-            parameters: parameters
+            parameters: parameters,
         })
         await pokerRoomCollection.insertOne(room)
         return roomId
@@ -201,7 +202,7 @@ router.get("/getTableInfos", checkToken, async (req, res) => {
 router.post("/createTable", checkToken, async (req, res) => {
     const {parameters, stakes, smallBlind, bigBlind, persons , clubId, robot} = req.body
 
-    if (!persons || stakes < 1000  || stakes > 10000000 || (persons != 4 && persons != 6))
+    if (!persons || stakes < 1000  || stakes > 10000000 || (persons !== 2 && persons != 4 && persons != 6 && persons !== 8))
         return res.status(405).send("check your Informations")
 
     try {

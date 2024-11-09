@@ -69,42 +69,11 @@ const playerSchema = new mongoose.Schema({
     robot: {
         type: Boolean,
         required: true
+    },
+    set : {
+        type: Number,
+        required: true
     }
 })
-
-// const playerSchema = new mongoose.Schema({
-//     userId: {
-//         type: String,
-//         required: true,
-//     },
-//     currentCards: {
-//         type: [handSchema], // Array of strings to hold card IDs or names
-//         default: null,
-//     },
-//     currentTextEmoji: {
-//         type: String,
-//         default: "",
-//     },
-//     userShips: {
-//         type: Number,
-//         required: true
-//     },
-//     avatar : {
-//         type: String,
-//         required: false,
-//     },
-//     avatar64 : {
-//         type: String,
-//         required: false,
-//     },
-//     status : {
-//         type: String,
-//         default: 'normal'
-//     },
-//     hasPalyed : {
-//         type: Boolean,
-//         default: false
-//     }
-// })
 
 export default playerSchema
