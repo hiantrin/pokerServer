@@ -7,6 +7,7 @@ import User from "../models/Users.js";
 import Club from "../models/Club.js";
 import { checkWhoIsNext, nextPlayer } from "../utils/startTheGame.js";
 import createRobot from "../utils/robot/createRobot.js";
+import { getPlayerSet } from "../utils/help.js";
 
 const router = express.Router()
 const db = mongoose.connection
@@ -150,7 +151,7 @@ router.get("/joinRoom", checkToken, async (req, res) => {
         if (!room.gameStarted)
         {
             if (room.playersData.filter(item => item.userId == req.userId))
-                room.playersData.push(createNode(user, room.buyIn))
+                room.playersData.push(createNode(user, room.buyIn, room.maxPlayers == 2 ? 6 : room.maxPlayers == 4 || room.maxPlayers == 6 ? 3 : 2))
             const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
                 $set : {players : room.players, playersData: room.playersData, full: room.players.length == room.players.maxPlayers ? true : false}
             }, {new: true, runValidators: true})
@@ -159,7 +160,10 @@ router.get("/joinRoom", checkToken, async (req, res) => {
         }
         else {
             if (room.waitingRoom.filter(item => item.userId == req.userId))
-                room.waitingRoom.push(createNode(user, room.buyIn))
+            {
+                let set = getPlayerSet(room)
+                room.waitingRoom.push(createNode(user, room.buyIn, set))
+            }
             const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
                 $set : {waitingRoom: room.waitingRoom}
             }, {new: true, runValidators: true})

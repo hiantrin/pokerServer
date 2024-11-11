@@ -21,7 +21,7 @@ import { allIn } from "./utils/playerMoves/allIn.js";
 import { callLastRaise } from "./utils/playerMoves/call.js";
 import { playerFolded } from "./utils/playerMoves/fold.js";
 import { quickRobot } from "./utils/robot/createRobot.js";
-import { sendMessage } from "./utils/help.js";
+import { getRoomInfos, sendMessage } from "./utils/help.js";
 
 dotenv.config();
 const app = express();
@@ -76,6 +76,7 @@ io.on("connection", (socket) => {
 
   socket.on("leaveRoom", async (room) => {
     socket.leave(room);
+    getRoomInfos(room, io)
   });
 
   // sockets responsible for the game
