@@ -66,7 +66,7 @@ export const checkWhoIsNext = (room, io) => {
 			await robotPlays(room, index, io);
 		}, 3000);
 	} else {
-		// handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
+		handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
 	}
 }
 
