@@ -26,7 +26,7 @@ const robotPlays = async (room, index, io) => {
         else if (room.gameRound !== "river")
             await callLastRaise(room.playersTurn, room.roomId, io)
         else if (room.gameRound == "river" && room.checked == true)
-            await raiseAction(room.playersTurn, room.bigBlind, io)
+            await raiseAction(room.playersTurn, room.bigBlind, io, "raise")
         else
             await callLastRaise(room.playersTurn, room.roomId, io)
     }

@@ -90,7 +90,7 @@ io.on("connection", (socket) => {
   socket.on("raise", async (data) => {
     const { userId, amount, roomId } = data;
     try {
-      await raiseAction(userId, amount, roomId, io);
+      await raiseAction(userId, amount, roomId, io, "raise");
     } catch (err) {
       console.log(err);
     }

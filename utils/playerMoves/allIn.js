@@ -4,6 +4,7 @@ import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import { nextStage } from "./check.js";
 import { saveAndMove } from "./call.js";
+import { raiseAction } from "./raise.js";
 
 const db = mongoose.connection
 
@@ -50,6 +51,10 @@ export const allIn = async (userId, roomId, io) => {
 		if (!room || userId !== room.playersTurn)
 		  return
 		let index = room.playersData.findIndex(player => player.userId === userId);
+        if (room.lastRaise < room.playersData[index].userShips) {
+            await raiseAction(userId, room.playersData[index].userShips, roomId, io, "All in")
+            return
+        }
 		room.paud = room.paud + room.playersData[index].userShips
         room.playersData[index].userShips = 0
         room.playersData[index].bet = room.playersData[index].bet + room.playersData[index].userShips
@@ -57,27 +62,22 @@ export const allIn = async (userId, roomId, io) => {
             userId : userId,
             playerMove : "All in"
         }
-        if (room.lastRaise < room.playersData[index].bet)
-            room.lastRaise = room.playersData[index].bet
-        else {
-            const otherPlayers = room.playersData.filter((item) => item.userId !== userId)
-            const finishedPlayers = otherPlayers.filter((item) => item.userShips > 0 && item.inTheGame )
-            const allbet = otherPlayers.filter((item) => item.bet !== room.lastRaise)
-            if (finishedPlayers.length == 0) {
-                room.playersTurn = null
-                await saveAndMove(roomId, room, io)
-                setTimeout(async () => {
-                    await getWinner(room, roomId, io)
-                }, 2000)
+        const otherPlayers = room.playersData.filter((item) => item.userId !== userId)
+        const finishedPlayers = otherPlayers.filter((item) => item.userShips > 0 && item.inTheGame )
+        const allbet = otherPlayers.filter((item) => item.bet !== room.lastRaise)
+        if (finishedPlayers.length == 0) {
+            room.playersTurn = null
+            await saveAndMove(roomId, room, io)
+            setTimeout(async () => {
+                await getWinner(room, roomId, io)
+            }, 2000)
+            return
+        } else if (allbet.length == 0) {
+            const data = await nextStage(room, roomId, io)
+            if (data.return == false)
                 return
-            } else if (allbet.length == 0) {
-                const data = await nextStage(room, roomId, io)
-                if (data.return == false)
-                    return
-                else 
-                    room = data.room
-            }
-
+            else 
+                room = data.room
         }
         room.playersTurn = nextPlayer(room)
         const myNewRoom = await pokerRoomCollection.findOneAndUpdate(

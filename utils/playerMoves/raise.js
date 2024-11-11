@@ -6,7 +6,7 @@ const db = mongoose.connection
 const pokerRoomCollection = db.collection("pokerrooms")
 
 
-export const raiseAction = async (userId, amount, roomId, io) => {
+export const raiseAction = async (userId, amount, roomId, io, type) => {
     try {
       let room = await pokerRoomCollection.findOne({ roomId: roomId });
       if (!room || userId !== room.playersTurn)
@@ -16,7 +16,7 @@ export const raiseAction = async (userId, amount, roomId, io) => {
       room.playersData[index].userShips = room.playersData[index].userShips - amount
       room.lastPlayerMove = {
         userId : userId,
-        playerMove : `Raise ${amount}`
+        playerMove : type == "All in" ? "All in" : `Raise ${amount}`
       }
       if (room.lastRaise == room.playersData[index].bet)
         room.lastRaise = room.lastRaise + amount
