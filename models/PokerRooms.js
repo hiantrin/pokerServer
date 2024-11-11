@@ -19,6 +19,23 @@ const winnerSchema = new mongoose.Schema({
     }
 })
 
+const chatSchema = new mongoose.Schema({
+    userId: {
+        id: {
+            type: String,
+            required: true,
+        },
+        name: {
+            type: String,
+            required: true,
+        },
+        message: {
+            type: String,
+            required: true,
+        }
+    }
+})
+
 const userPlaySchema = new mongoose.Schema({
     userId: {
         type: String,
@@ -143,6 +160,11 @@ const pokerRoomSchema = new mongoose.Schema({
     lastPlayerMove : {
         type: userPlaySchema,
         default : null
+    },
+    chat : {
+        type: [chatSchema],
+        default: [],
+        required: true
     }
 })
 

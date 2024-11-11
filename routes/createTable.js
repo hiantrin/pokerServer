@@ -47,6 +47,7 @@ const createTable = async (value, userId, persons, user, robot, smallBlind, bigB
             bigBlind: bigBlind,
             winner: null,
             parameters: parameters,
+            chat: []
         })
         await pokerRoomCollection.insertOne(room)
         return roomId

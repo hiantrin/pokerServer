@@ -21,6 +21,7 @@ import { allIn } from "./utils/playerMoves/allIn.js";
 import { callLastRaise } from "./utils/playerMoves/call.js";
 import { playerFolded } from "./utils/playerMoves/fold.js";
 import { quickRobot } from "./utils/robot/createRobot.js";
+import { sendMessage } from "./utils/help.js";
 
 dotenv.config();
 const app = express();
@@ -137,7 +138,20 @@ io.on("connection", (socket) => {
       console.log(err);
     }
   });
+
+  socket.on("sendMessage", async (data) => {
+		const { roomId, message } = data;
+
+		try {
+			await sendMessage(roomId, message, io)
+		} catch (err) {
+			console.log(err);
+		}
+  });
+
 });
+
+
 
 app.get("/", (req, res) => {
   res.send("hamza learning node js and express");
