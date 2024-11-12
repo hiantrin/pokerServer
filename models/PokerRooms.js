@@ -71,6 +71,10 @@ const parametersSchema = new mongoose.Schema({
     randomSets: {
         type: Boolean,
         required: true
+    },
+    clubId : {
+        type: String,
+        required: true
     }
 })
 

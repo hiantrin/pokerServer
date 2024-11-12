@@ -64,10 +64,16 @@ router.patch("/quitTable", checkToken, async (req, res) => {
     try {
         const oldUser = await collection.findOne({ _id: req.userId });
         if (!oldUser)
+        {
+            console.log("here")
             return res.status(400).send("user not found")
+        }
         const room = await pokerRoomCollection.findOne({roomId: req.body.roomId})
         if (!room)
+        {
+            console.log("here1")
             return res.status(400).send("didn't find room")
+        }
         const thePlayer = room.playersData.filter((item) => item.userId == req.userId)
         if (thePlayer.length == 0)
         {   
@@ -88,6 +94,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
         }, { new: true, runValidators: true})
         room.playersData = room.playersData.filter((item) => item.userId != req.userId)
         room.players = room.players.filter(item => item != req.userId)
+
         if (room.players.length == 1)
         {
             room.gameStarted = false
@@ -109,11 +116,13 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             { roomId: req.body.roomId }, // Filter
             { $set: room }, // Update
             { returnDocument: 'after', runValidators: true } // Options
-          );
-        checkWhoIsNext(myNewRoom, io)
+        );
+        if (room.players.length > 1)
+            checkWhoIsNext(myNewRoom, io)
         io.to(myNewRoom.roomId).emit('updatePlayers', myNewRoom);
         res.status(200).send(user)
     } catch (err) {
+        console.log("last here")
         res.status(400).send("Internal server Error")
     }
 })
@@ -151,7 +160,7 @@ router.get("/joinRoom", checkToken, async (req, res) => {
         if (!room.gameStarted)
         {
             if (room.playersData.filter(item => item.userId == req.userId))
-                room.playersData.push(createNode(user, room.buyIn, room.maxPlayers == 2 ? 6 : room.maxPlayers == 4 || room.maxPlayers == 6 ? 3 : 2))
+                room.playersData.push(createNode(user, room.buyIn, getPlayerSet(room)))
             const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
                 $set : {players : room.players, playersData: room.playersData, full: room.players.length == room.players.maxPlayers ? true : false}
             }, {new: true, runValidators: true})
@@ -312,6 +321,7 @@ const checkplayersCards = (cards, playersData) => {
         return false
     return true
 }
+
 const createCardsToChange = (room, cards) => {
     if (room.gameRound == "river")
         return room.communityCards

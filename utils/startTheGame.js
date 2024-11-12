@@ -66,7 +66,7 @@ export const checkWhoIsNext = (room, io) => {
 			await robotPlays(room, index, io);
 		}, 3000);
 	} else {
-		handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
+		// handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
 	}
 }
 
@@ -152,6 +152,8 @@ const createCardsPlayers = (room) => {
 			robot: room.playersData[index].robot,
 			set: room.playersData[index].set,
 		}));
+		room.playersData = room.playersData.sort((a, b) => a.set - b.set)
+
 	return room
 }
 
@@ -173,6 +175,7 @@ const initialGame = (room) => {
 	room.playersData[0].robot = false,
 	room.winner = null,
 	room.lastPlayerMove = null
+	room.robot = room.robot
 	return room
 }
 
@@ -186,7 +189,7 @@ const startTheGame = async (roomId, io) => {
     if (room && room.playersData.length >= 2) {
 		room = createCardsPlayers(room)
 		let i = 0;
-		while (i < room.playersData.length)
+		while (i < 2)
 		{
 			if (i == 0)
 			{
@@ -216,7 +219,8 @@ const startTheGame = async (roomId, io) => {
 		{ $set: room }, // Update
 		{ returnDocument: 'after', runValidators: true } // Options
 	  );
-	checkWhoIsNext(room, io)
+	if (room.playersData.length >= 2)
+		checkWhoIsNext(room, io)
 	io.to(roomId).emit('updatePlayers', myNewRoom);
   } catch (err) {
     console.error('Error finding the room:', err);
