@@ -1,20 +1,53 @@
 function bestCombination(userHand, communityCards) {
-    const allCards = [...userHand, ...communityCards];
-    const ranks = getCardRanks(allCards);
-    const suits = groupBy(allCards, 'suit');
-  
-    if (isRoyalFlush(suits)) return { type: "Royal Flush", ranks: [14, 13, 12, 11, 10] };
-    if (isStraightFlush(suits)) return { type: "Straight Flush", ranks: getStraightFlushRanks(suits) };
-    if (isFourOfAKind(ranks)) return { type: "Four of a Kind", ranks: getFourOfAKindRanks(ranks) };
-    if (isFullHouse(ranks)) return { type: "Full House", ranks: getFullHouseRanks(ranks) };
-    if (isFlush(suits)) return { type: "Flush", ranks: getFlushRanks(suits) };
-    if (isStraight(ranks)) return { type: "Straight", ranks: getStraightRanks(ranks) };
-    if (isThreeOfAKind(ranks)) return { type: "Three of a Kind", ranks: getThreeOfAKindRanks(ranks) };
-    if (isTwoPair(ranks)) return { type: "Two Pair", ranks: getTwoPairRanks(ranks) };
-    if (isOnePair(ranks)) return { type: "One Pair", ranks: getOnePairRanks(ranks) };
-  
-    return { type: "High Card", ranks: ranks.slice(-5).reverse() };
+  const allCards = [...userHand, ...communityCards];
+  const fiveCardCombos = generateFiveCardCombinations(allCards);
+
+  let bestHand = null;
+
+  for (const combo of fiveCardCombos) {
+      const ranks = getCardRanks(combo);
+      const suits = groupBy(combo, 'suit');
+      
+      let currentHand = null;
+      
+      if (isRoyalFlush(suits)) currentHand = { type: "Royal Flush", ranks: [14, 13, 12, 11, 10] };
+      else if (isStraightFlush(suits)) currentHand = { type: "Straight Flush", ranks: getStraightFlushRanks(suits) };
+      else if (isFourOfAKind(ranks)) currentHand = { type: "Four of a Kind", ranks: getFourOfAKindRanks(ranks) };
+      else if (isFullHouse(ranks)) currentHand = { type: "Full House", ranks: getFullHouseRanks(ranks) };
+      else if (isFlush(suits)) currentHand = { type: "Flush", ranks: getFlushRanks(suits) };
+      else if (isStraight(ranks)) currentHand = { type: "Straight", ranks: getStraightRanks(ranks) };
+      else if (isThreeOfAKind(ranks)) currentHand = { type: "Three of a Kind", ranks: getThreeOfAKindRanks(ranks) };
+      else if (isTwoPair(ranks)) currentHand = { type: "Two Pair", ranks: getTwoPairRanks(ranks) };
+      else if (isOnePair(ranks)) currentHand = { type: "One Pair", ranks: getOnePairRanks(ranks) };
+      else currentHand = { type: "High Card", ranks: ranks.slice(-5).reverse() };
+      
+      // Update best hand if this combination is better
+      if (!bestHand || compareHands(currentHand, bestHand) > 0) {
+          bestHand = currentHand;
+      }
   }
+
+  return bestHand;
+}
+
+function generateFiveCardCombinations(cards) {
+  const results = [];
+  
+  function combine(start, combo) {
+      if (combo.length === 5) {
+          results.push([...combo]);
+          return;
+      }
+      for (let i = start; i < cards.length; i++) {
+          combo.push(cards[i]);
+          combine(i + 1, combo);
+          combo.pop();
+      }
+  }
+  
+  combine(0, []);
+  return results;
+}
   
   function getCardRanks(cards) {
     const rankMap = {

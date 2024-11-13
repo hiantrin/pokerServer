@@ -24,14 +24,17 @@ export function createDeck() {
     }
   }
   
-  export function dealCards(deck, numPlayers) {
+  export function dealCards(deck, numPlayers, cardsNumber) {
     const players = Array.from({ length: numPlayers }, () => ({
       hand: []
     }));
   
-    for (let i = 0; i < numPlayers; i++) {
-      players[i].hand.push(deck.pop(), deck.pop());
+    for (let j = 0; j < cardsNumber; j++) {
+      for (let i = 0; i < numPlayers; i++) {
+        players[i].hand.push(deck.pop());
+      }
     }
+    
   
     return players;
 }

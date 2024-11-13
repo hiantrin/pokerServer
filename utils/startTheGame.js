@@ -128,7 +128,7 @@ const createCardsPlayers = (room) => {
 		}
 		const deck = createDeck();
 		shuffleDeck(deck);
-		const hands = dealCards(deck, room.players.length);
+		const hands = dealCards(deck, room.players.length, room.gameType.cards);
 		const communityCards = dealCommunityCards(deck);
 		room.communityCards = communityCards;
 		room.gameStarted = true

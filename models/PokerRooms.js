@@ -78,6 +78,17 @@ const parametersSchema = new mongoose.Schema({
     }
 })
 
+const gameTypeSchema = new mongoose.Schema({
+    type: {
+        type: String,
+        required: true
+    },
+    cards: {
+        type: Number,
+        required: true
+    }
+})
+
 const pokerRoomSchema = new mongoose.Schema({
     roomId : {
         type: String,
@@ -112,7 +123,6 @@ const pokerRoomSchema = new mongoose.Schema({
         type: String,
         required: false
     },
-    // Hamza Rafi
     gameRound : {
         type: String,
         default: 'preflop'
@@ -168,6 +178,10 @@ const pokerRoomSchema = new mongoose.Schema({
     chat : {
         type: [chatSchema],
         default: [],
+        required: true
+    },
+    gameType : {
+        type: gameTypeSchema,
         required: true
     }
 })
