@@ -8,6 +8,7 @@ const db = mongoose.connection
 
 const pokerRoomCollection = db.collection("pokerrooms")
 const clubCollection = db.collection("clubs")
+const collection = db.collection('users');
 
 export const sendMessage = async (roomId, message, io) => {
     try {
@@ -69,7 +70,7 @@ export const getRoomInfos = async (roomId, io) => {
     try {
         const room = await pokerRoomCollection.findOne({ roomId: roomId })
         io.to(roomId).emit('updatePlayers', room);
-        if (room.playersData.length == 0 || (room.playersData.length == 1 && room.robot == true))
+        if ((room.playersData.length == 0 && room.playerPlace.length == 0 ) || (room.playersData.length == 1 && room.robot == true))
             await deleteRoom(room)
     } catch (err) {
         console.log(err)
@@ -116,3 +117,65 @@ export const kickUser = async (userId, roomId, io) => {
 	}
 }
 
+export const sendData = async (roomId, io) => {
+    try {
+        const room = await pokerRoomCollection.findOne({ roomId: roomId })
+        io.to(roomId).emit('updatePlayers', room);
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+const setInPlayer = async (room, userId, set, io) => {
+    try {
+        let index = room.playerPlace.findIndex((item) => item.userId == userId)
+        room.playerPlace[index].set = set
+        if (!room.gameStarted)
+            room.playersData.push(room.playerPlace[index])
+        else
+            room.waitingRoom.push(room.playerPlace[index])
+        room.playerPlace = room.playerPlace.filter((item) => item.userId !== userId)
+        const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+            { roomId: room.roomId }, // Filter
+            { $set: room }, // Update
+            { returnDocument: 'after', runValidators: true } // Options
+        );
+        io.to(room.roomId).emit('updatePlayers', myNewRoom);
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+export const acceptSet = async (userId, set, roomId, io) => {
+    try {
+        const room = await pokerRoomCollection.findOne({roomId: roomId})
+        if (!room)
+            return
+        const thePlayer = room.playersData.filter((item) => item.userId == userId || item.set == set)
+        const theWaiting = room.waitingRoom.filter((item) => item.userId == userId || item.set == set)
+        if (thePlayer.length == 0 && theWaiting.length == 0)
+            await setInPlayer(room, userId, set, io)
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+
+export const takeSet = async (username, roomId, set, userId, io) => {
+    try {
+        const room = await pokerRoomCollection.findOne({roomId: roomId})
+        if (!room)
+            return 
+        const thePlayer = room.playersData.filter((item) => item.userId == userId || item.set == set)
+        const theWaiting = room.waitingRoom.filter((item) => item.userId == userId || item.set == set)
+        if (thePlayer.length == 0 && theWaiting.length == 0)
+        {
+            if ( room.parameters.admin == userId )
+                await setInPlayer(room, userId, set, io)
+            else
+                io.to(room.roomId).emit("notifeAdmin", {username: username, userId: userId, set: set})
+        }
+    } catch (err) {
+        console.log(err)
+    }
+}

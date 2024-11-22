@@ -41,7 +41,7 @@ const createTable = async (value, userId, persons, user, robot, smallBlind, bigB
             buyIn : value,
             players,
             full: false,
-            playersData: [createNode(user, value, persons == 2 ? 2 : 1)],
+            playersData: !parameters || (parameters && parameters.randomSets) ? [createNode(user, value, persons == 2 ? 2 : 1)] : [],
             gameStarted: false,
             robot: robot,
             smallBlind: smallBlind,
@@ -49,7 +49,8 @@ const createTable = async (value, userId, persons, user, robot, smallBlind, bigB
             winner: null,
             parameters: parameters,
             chat: [],
-            gameType: gameType
+            gameType: gameType,
+            playerPlace : parameters && parameters.randomSets == false ? [createNode(user, value, 0)] : []
         })
         await pokerRoomCollection.insertOne(room)
         return roomId
@@ -79,6 +80,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
         if (thePlayer.length == 0)
         {   
             const waiting = room.waitingRoom.filter((item) => item.userId == req.userId)
+            const place = room.playerPlace.filter((item) => item.userId == req.userId)
             const user = await User.findByIdAndUpdate(req.userId, {
                 $set: {roomId: null}
             }, { new: true, runValidators: true})
@@ -86,6 +88,11 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             {
                 await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
                     $set : {waitingRoom: room.waitingRoom.filter((item) => item.userId !== req.userId)}
+                }, {new: true, runValidators: true})
+            }
+            if (place.length !== 0) {
+                await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+                    $set : {playerPlace: room.playerPlace.filter((item) => item.userId !== req.userId)}
                 }, {new: true, runValidators: true})
             }
             return res.status(200).send(user)
@@ -96,7 +103,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
         room.playersData = room.playersData.filter((item) => item.userId != req.userId)
         room.players = room.players.filter(item => item != req.userId)
 
-        if (room.players.length == 1)
+        if (room.playersData.length == 1)
         {
             room.gameStarted = false
             room.gameRound = "preflop"
@@ -118,7 +125,7 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             { $set: room }, // Update
             { returnDocument: 'after', runValidators: true } // Options
         );
-        if (room.players.length > 1)
+        if (room.playersData.length > 1)
             checkWhoIsNext(myNewRoom, io)
         io.to(myNewRoom.roomId).emit('updatePlayers', myNewRoom);
         res.status(200).send(user)
@@ -158,7 +165,15 @@ router.get("/joinRoom", checkToken, async (req, res) => {
             }, {new: true, runValidators: true})
             if (!user)
                 return res.status(400).send("didn't find the user")
-        if (!room.gameStarted)
+        if (room.parameters && room.parameters.randomSets == false)
+        {
+            if (room.playerPlace.filter(item => item.userId == req.userId))
+                room.playerPlace.push(createNode(user, room.buyIn, 0))
+            await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+                $set : {players : room.players, playerPlace: room.playerPlace, full: room.players.length == room.players.maxPlayers ? true : false}
+            }, {new: true, runValidators: true})
+        }
+        else if (!room.gameStarted)
         {
             if (room.playersData.filter(item => item.userId == req.userId))
                 room.playersData.push(createNode(user, room.buyIn, getPlayerSet(room)))

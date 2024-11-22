@@ -21,7 +21,7 @@ import { allIn } from "./utils/playerMoves/allIn.js";
 import { callLastRaise } from "./utils/playerMoves/call.js";
 import { playerFolded } from "./utils/playerMoves/fold.js";
 import { quickRobot } from "./utils/robot/createRobot.js";
-import { getRoomInfos, kickUser, sendMessage } from "./utils/help.js";
+import { acceptSet, getRoomInfos, kickUser, sendData, sendMessage, takeSet } from "./utils/help.js";
 
 dotenv.config();
 const app = express();
@@ -72,12 +72,35 @@ io.on("connection", (socket) => {
         console.error("Error checking to start game:", error);
       }
     }
+    else {
+      console.log("this is room =>", room )
+      sendData(room, io)
+    }
   });
 
   socket.on("leaveRoom", async (room) => {
     socket.leave(room);
     getRoomInfos(room, io)
   });
+
+  socket.on("takeSet", async (data) => {
+    const {username, roomId, set, userId} = data
+    try {
+      await takeSet(username, roomId, set, userId, io)
+    } catch (err) {
+      console.log(err)
+    }
+  })
+
+  socket.on("acceptSet", async (data) => {
+    const {userId, set, roomId} = data
+    try {
+      await acceptSet(userId, set, roomId, io)
+    } catch (err) {
+      console.log(err)
+    }
+
+  })
 
   // sockets responsible for the game
   socket.on("call", async (data) => {
