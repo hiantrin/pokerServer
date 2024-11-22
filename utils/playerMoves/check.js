@@ -3,6 +3,7 @@ import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import mongoose from "mongoose";
 import { saveAndMove } from "./call.js";
+import { sendTaxToAdmin } from "./allIn.js";
 
 const db = mongoose.connection
 
@@ -37,6 +38,11 @@ export const nextStage = async (room, roomId, io) => {
                 while (i < win.winningPlayers.length)
                 {
                     let myIndex = room.playersData.findIndex(player => player.userId === win.winningPlayers[i]);
+                    if (room.parameters)
+                    {
+                        room.paud = room.paud - ((room.paud / 100 ) * room.parameters.tax)
+                        sendTaxToAdmin(room)
+                    }
                     room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
                     i++
                 }

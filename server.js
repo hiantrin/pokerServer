@@ -21,7 +21,7 @@ import { allIn } from "./utils/playerMoves/allIn.js";
 import { callLastRaise } from "./utils/playerMoves/call.js";
 import { playerFolded } from "./utils/playerMoves/fold.js";
 import { quickRobot } from "./utils/robot/createRobot.js";
-import { getRoomInfos, sendMessage } from "./utils/help.js";
+import { getRoomInfos, kickUser, sendMessage } from "./utils/help.js";
 
 dotenv.config();
 const app = express();
@@ -149,6 +149,16 @@ io.on("connection", (socket) => {
 			console.log(err);
 		}
   });
+
+  socket.on("kickUser", async (data) => {
+    const {userId, roomId} = data
+
+    try {
+      await kickUser(userId, roomId, io)
+    } catch (err) {
+      console.log(err)
+    }
+  })
 
 });
 

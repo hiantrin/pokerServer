@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import startTheGame, { checkWhoIsNext } from "../startTheGame.js";
 import { nextPlayer } from "../startTheGame.js";
 import { nextStage } from "./check.js";
-import { getWinner } from "./allIn.js";
+import { getWinner, sendTaxToAdmin } from "./allIn.js";
 import { saveAndMove } from "./call.js";
 
 const db = mongoose.connection
@@ -15,6 +15,11 @@ const launchTwoParty = async (room, roomId, io, userId) => {
         room.playersData[i].inTheGame = false
         room.playersData[i].bet = 0
         let index = room.playersData.findIndex(player => player.userId !== userId);
+        if (room.parameters)
+        {
+            room.paud = room.paud - ((room.paud / 100 ) * room.parameters.tax)
+            sendTaxToAdmin(room)
+        }
         room.playersData[index].userShips = room.playersData[index].userShips + room.paud
         room.playersTurn = null
         room.winner = {
@@ -38,7 +43,6 @@ const launchTwoParty = async (room, roomId, io, userId) => {
     } catch (err) {
         return room
     }
-    
 }
 
 export const playerFolded = async (userId, roomId, io) => {

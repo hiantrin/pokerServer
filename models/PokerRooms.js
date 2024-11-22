@@ -75,6 +75,10 @@ const parametersSchema = new mongoose.Schema({
     clubId : {
         type: String,
         required: true
+    },
+    admin : {
+        type: String,
+        required: true
     }
 })
 
@@ -179,6 +183,11 @@ const pokerRoomSchema = new mongoose.Schema({
         type: [chatSchema],
         default: [],
         required: true
+    },
+    chatAvailibility: {
+        type: Boolean,
+        required: true,
+        default: true
     },
     gameType : {
         type: gameTypeSchema,

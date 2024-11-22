@@ -9,6 +9,22 @@ import { raiseAction } from "./raise.js";
 const db = mongoose.connection
 
 const pokerRoomCollection = db.collection("pokerrooms")
+const userCollection = db.collection("users")
+
+export const sendTaxToAdmin = async (room) => {
+    try {
+        const user = await userCollection.findOne({_id: room.parameters.admin})
+        let win = ((room.paud / 100) * room.parameters.tax) + user.ships
+        const newUser = await userCollection.findOneAndUpdate(
+            {_id: room.parameters.admin},
+            { $set :  {ships:  win}},
+            { returnDocument: 'after', runValidators: true } 
+        )
+        console.log(newUser)
+    } catch (err) {
+        console.log(err)
+    }
+}
 
 export const getWinner = async (room, roomId, io) => {
     try {
@@ -25,6 +41,11 @@ export const getWinner = async (room, roomId, io) => {
         while (i < win.winningPlayers.length)
         {
             let myIndex = room.playersData.findIndex(player => player.userId === win.winningPlayers[i]);
+            if (room.parameters)
+            {
+                room.paud = room.paud - ((room.paud / 100 ) * room.parameters.tax)
+                sendTaxToAdmin(room)
+            }
             room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
             i++
         }

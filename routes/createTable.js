@@ -268,7 +268,21 @@ router.post("/addRobot", checkToken, async (req, res) => {
     } catch (err) {
         res.status(500).send('Internal server error');
     }
-}) 
+})
+
+router.post("/switchChat", checkToken, async (req, res) => {
+    try {
+        const room = await pokerRoomCollection.findOne({roomId: req.body.roomId})
+        if (!room)
+            return res.status(400).send("didn't find room")
+        await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
+            $set : {chatAvailibility: req.body.chat}
+        }, {new: true, runValidators: true})
+        res.status(200).send("its changed")
+    } catch (err) {
+        res.status(500).send('Internal server error');
+    }
+})
 
 
 ////// Admin

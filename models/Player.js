@@ -73,6 +73,11 @@ const playerSchema = new mongoose.Schema({
     set : {
         type: Number,
         required: true
+    },
+    kicked : {
+        type: Boolean,
+        required: true,
+        default: false
     }
 })
 

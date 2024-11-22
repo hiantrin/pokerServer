@@ -12,6 +12,18 @@ const db = mongoose.connection
 
 const pokerRoomCollection = db.collection("pokerrooms")
 
+const auction = [
+	15000,
+    30000,
+    60000,
+    90000,
+    120000,
+    180000,
+    240000,
+    300000,
+    300000
+]
+
 const handlePlayerTurnTimeout = async (room, roomId, io, userId) => {
     let playerTurnChanged = false;
 
@@ -24,7 +36,7 @@ const handlePlayerTurnTimeout = async (room, roomId, io, userId) => {
 			}, 1000)
 			return
         }
-    }, 10000);
+    }, room.parameters ? auction[room.parameters.gameAuction] : 15000);
 
     // Listen for any further changes in playersTurn
     const pokerRoomsChangeStream = PokerRoom.watch();
@@ -58,15 +70,14 @@ const playPlayersTurn = async (room, userId, io) => {
 };
 
 
-
-export const checkWhoIsNext = (room, io) => {
+export const checkWhoIsNext = async (room, io) => {
 	let index = room.playersData.findIndex((player) => player.userId == room.playersTurn);
 	if (room.playersData[index].robot === true) {
 		setTimeout(async () => {
 			await robotPlays(room, index, io);
 		}, 3000);
 	} else {
-		handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
+		// handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
 	}
 }
 
@@ -99,7 +110,7 @@ export const checkIfAllOut = (userId, room, index) => {
 
 const kickUsers = async (room) => {
 	try {
-		const playersOut = room.playersData.filter((item) => item.userShips <= 0)
+		const playersOut = room.playersData.filter((item) => item.userShips <= 0 || item.kicked == true)
 		let i = 0
 		while (i < playersOut.length)
 		{
