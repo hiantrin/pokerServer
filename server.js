@@ -67,7 +67,17 @@ io.on("connection", (socket) => {
     if (player) {
       try {
         const hasTwoPlayers = await checkToStartGame(room);
-        if (hasTwoPlayers) await startTheGame(room, io);
+        if (hasTwoPlayers.status == true)
+        {
+          if (hasTwoPlayers.counter == false)
+            await startTheGame(room, io)
+          else {
+			io.to(room).emit('launchCounter');
+            setTimeout(async () => {
+              await startTheGame(room, io)
+            }, 5000)
+          }
+        }
       } catch (error) {
         console.error("Error checking to start game:", error);
       }

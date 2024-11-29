@@ -80,7 +80,20 @@ export const playerFolded = async (userId, roomId, io) => {
                     if (data.return == false)
                         return
                     else
+                    {
                         room = data.room
+                        setTimeout(async () => {
+                            room.playersTurn = nextPlayer(room)
+                            const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+                                { roomId: roomId }, // Filter
+                                { $set: room }, // Update
+                                { returnDocument: 'after', runValidators: true } // Options
+                            );
+                            checkWhoIsNext(myNewRoom, io)
+                            io.to(roomId).emit('updatePlayers', myNewRoom);
+                        }, data.counter)
+                        return
+                    }
                 } else if (plyerOut.length < 2) {
                     room.playersTurn = null
                     await saveAndMove(roomId, room, io)

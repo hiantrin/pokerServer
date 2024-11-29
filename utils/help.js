@@ -20,6 +20,7 @@ export const sendMessage = async (roomId, message, io) => {
                 { $set: room }, // Update
                 { returnDocument: 'after', runValidators: true } // Options
               );
+            io.to(roomId).emit("tableNotif", message)
             io.to(roomId).emit('updatePlayers', myNewRoom);
         }
     } catch (err)  {

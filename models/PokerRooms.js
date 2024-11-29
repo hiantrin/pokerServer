@@ -20,7 +20,6 @@ const winnerSchema = new mongoose.Schema({
 })
 
 const chatSchema = new mongoose.Schema({
-    userId: {
         id: {
             type: String,
             required: true,
@@ -33,7 +32,6 @@ const chatSchema = new mongoose.Schema({
             type: String,
             required: true,
         }
-    }
 })
 
 const userPlaySchema = new mongoose.Schema({

@@ -77,7 +77,7 @@ export const checkWhoIsNext = async (room, io) => {
 			await robotPlays(room, index, io);
 		}, 3000);
 	} else {
-		handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
+		// handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
 	}
 }
 
@@ -108,7 +108,7 @@ export const checkIfAllOut = (userId, room, index) => {
   	return false
 }
 
-const kickUsers = async (room) => {
+const kickUsers = async (room, io) => {
 	try {
 		const playersOut = room.playersData.filter((item) => item.userShips <= 0 || item.kicked == true)
 		let i = 0
@@ -121,6 +121,31 @@ const kickUsers = async (room) => {
 			room.players = room.players.filter((item) => item !== playersOut[i].userId)
 			i++
 		}
+		i = 0
+		let counter = 0
+		while (counter < room.waitingRoom.length)
+		{
+			room.playersData.push(room.waitingRoom[counter])
+			room.players.push(room.waitingRoom[counter].userId)
+			room.waitingRoom = room.waitingRoom.filter((item) => item.userId !== room.waitingRoom[counter].userId)
+			counter++
+		}
+		while (i < room.playersData.length)
+		{
+			room.playersData[i].currentCards = null
+			room.playersData[i].inTheGame = true
+			i++
+		}
+		room.checking = false
+		room.gameRound = "preflop"
+		room.winner = null
+		room.lastPlayerMove = null
+		const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+			{ roomId: room.roomId }, // Filter
+			{ $set: room }, // Update
+			{ returnDocument: 'after', runValidators: true } // Options
+		);
+		io.to(room.roomId).emit('updatePlayers', myNewRoom);
 		return room
 	} catch (err) {
 		return room
@@ -129,22 +154,12 @@ const kickUsers = async (room) => {
 }
 
 const createCardsPlayers = (room) => {
-	let counter = 0
-		while (counter < room.waitingRoom.length)
-		{
-			room.playersData.push(room.waitingRoom[counter])
-			room.players.push(room.waitingRoom[counter].userId)
-			room.waitingRoom = room.waitingRoom.filter((item) => item.userId !== room.waitingRoom[counter].userId)
-			counter++
-		}
 		const deck = createDeck();
 		shuffleDeck(deck);
 		const hands = dealCards(deck, room.players.length, room.gameType.cards);
 		const communityCards = dealCommunityCards(deck);
 		room.communityCards = communityCards;
 		room.gameStarted = true
-		room.winner = null
-		room.lastPlayerMove = null
 
 		room.playersData = hands.map((hand, index) => ({
 			userId: room.playersData[index].userId,
@@ -196,8 +211,9 @@ const initialGame = (room) => {
 
 const startTheGame = async (roomId, io) => {
   try {
-	let room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }))
+	let room = await kickUsers(await pokerRoomCollection.findOne({ roomId: roomId }), io)
     if (room && room.playersData.length >= 2) {
+		io.to(roomId).emit('startGame');
 		room = createCardsPlayers(room)
 		let i = 0;
 		while (i < 2)
@@ -215,24 +231,31 @@ const startTheGame = async (roomId, io) => {
 		}
         room.paud = room.bigBlind + room.smallBlind
         room.lastRaise = room.bigBlind
-        room.checking = false
-		room.gameRound = "preflop"
-        if (room.players.length == 2 ) {
+        if (room.playersData.length == 2 ) {
           room.playersTurn = room.players[0]
         } else 
           room.playersTurn = room.players[2]
-		io.to(roomId).emit('startGame');
     } else {
 		room = initialGame(room)
+		const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+			{ roomId: roomId }, // Filter
+			{ $set: room }, // Update
+			{ returnDocument: 'after', runValidators: true } // Options
+		);
+		io.to(roomId).emit('updatePlayers', myNewRoom);
+		return
 	}
-	const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
-		{ roomId: roomId }, // Filter
-		{ $set: room }, // Update
-		{ returnDocument: 'after', runValidators: true } // Options
-	  );
-	if (room.playersData.length >= 2)
+	let count = (room.playersData.length * 2) * 800
+	setTimeout(async () => {
+		const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+			{ roomId: roomId }, // Filter
+			{ $set: room }, // Update
+			{ returnDocument: 'after', runValidators: true } // Options
+		);
 		checkWhoIsNext(room, io)
-	io.to(roomId).emit('updatePlayers', myNewRoom);
+		io.to(roomId).emit('updatePlayers', myNewRoom);
+	}, count)
+	
   } catch (err) {
     console.error('Error finding the room:', err);
     return err

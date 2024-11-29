@@ -9,9 +9,13 @@ async function checkToStartGame(roomId) {
     try {
         const room = await pokerRoomCollection.findOne({ roomId: roomId });
         if (room && room.players.length >= 2 && !room.gameStarted) {
-            return true;
-        }
-        return false;
+            if (room.parameters && room.parameters.randomSets == false)
+            {
+                    return {status: true, counter: true}
+            } else
+                return {status: true, counter: false}
+        } else
+            return {status: false, counter: false}
     } catch (error) {
         console.error('Error checking players in room:', error);
         return false
