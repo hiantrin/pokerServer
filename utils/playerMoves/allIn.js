@@ -11,6 +11,8 @@ const db = mongoose.connection
 const pokerRoomCollection = db.collection("pokerrooms")
 const userCollection = db.collection("users")
 
+
+
 export const sendTaxToAdmin = async (room) => {
     try {
         const user = await userCollection.findOne({_id: room.parameters.admin})
@@ -20,7 +22,6 @@ export const sendTaxToAdmin = async (room) => {
             { $set :  {ships:  win}},
             { returnDocument: 'after', runValidators: true } 
         )
-        console.log(newUser)
     } catch (err) {
         console.log(err)
     }
@@ -28,7 +29,6 @@ export const sendTaxToAdmin = async (room) => {
 
 export const getWinner = async (room, roomId, io) => {
     try {
-        room.gameRound = "river"
         room.playersTurn = null
         room.lastPlayerMove = null
         const win  = getBestHandPlayers(room.playersData.filter((item) => item.inTheGame), room.communityCards)
@@ -45,6 +45,8 @@ export const getWinner = async (room, roomId, io) => {
             {
                 room.paud = room.paud - ((room.paud / 100 ) * room.parameters.tax)
                 sendTaxToAdmin(room)
+                let winnings = ((room.paud / 100) * room.parameters.tax)
+                room.parameters.adminWinnings = room.parameters.adminWinnings + winnings
             }
             room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
             i++
@@ -65,6 +67,29 @@ export const getWinner = async (room, roomId, io) => {
     
 }
 
+
+const secondCards = async (room, io, counter) => {
+    try {
+        const players = room.playersData.filter((item) => item.inTheGame)
+        if (room.parameters && room.parameters.playTwice && players.length == 2)
+        {
+            setTimeout(async () => {
+                room.gameRound = "finish"
+                const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+                    { roomId: room.roomId }, // Filter
+                    { $set: room }, // Update
+                    { returnDocument: 'after', runValidators: true } // Options
+                );
+                io.to(room.roomId).emit('updatePlayers', myNewRoom);
+            }, counter)
+            return 5000
+        }
+    else 
+        return 0
+    } catch (err) {
+        console.log(err)
+    }
+}
 
 export const allIn = async (userId, roomId, io) => {
 	try {
@@ -88,10 +113,11 @@ export const allIn = async (userId, roomId, io) => {
         const allbet = otherPlayers.filter((item) => item.bet !== room.lastRaise)
         if (finishedPlayers.length == 0) {
             room.playersTurn = null
-            await saveAndMove(roomId, room, io)
+            let counter  = await saveAndMove(roomId, room, io)
+            let secondCounter = await secondCards(room, io, counter)
             setTimeout(async () => {
                 await getWinner(room, roomId, io)
-            }, 2000)
+            }, 2000 + counter + secondCounter)
             return
         } else if (allbet.length == 0) {
             const data = await nextStage(room, roomId, io)

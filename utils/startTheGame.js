@@ -77,7 +77,7 @@ export const checkWhoIsNext = async (room, io) => {
 			await robotPlays(room, index, io);
 		}, 3000);
 	} else {
-		// handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
+		handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
 	}
 }
 
@@ -140,6 +140,7 @@ const kickUsers = async (room, io) => {
 		room.gameRound = "preflop"
 		room.winner = null
 		room.lastPlayerMove = null
+		room.gameStarted = true
 		const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
 			{ roomId: room.roomId }, // Filter
 			{ $set: room }, // Update
@@ -158,8 +159,10 @@ const createCardsPlayers = (room) => {
 		shuffleDeck(deck);
 		const hands = dealCards(deck, room.players.length, room.gameType.cards);
 		const communityCards = dealCommunityCards(deck);
+		const communityCards2 = dealCommunityCards(deck);
 		room.communityCards = communityCards;
-		room.gameStarted = true
+		room.communityCards2 = communityCards2;
+		
 
 		room.playersData = hands.map((hand, index) => ({
 			userId: room.playersData[index].userId,

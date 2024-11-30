@@ -77,6 +77,11 @@ const parametersSchema = new mongoose.Schema({
     admin : {
         type: String,
         required: true
+    },
+    adminWinnings : {
+        type : Number,
+        required : true,
+        default: 0
     }
 })
 
@@ -196,7 +201,11 @@ const pokerRoomSchema = new mongoose.Schema({
         type : [playerSchema],
         default : [],
         required : true
-    }
+    },
+    communityCards2: {
+        type: Array,
+        default: []
+    },
 })
 
 const PokerRoom = mongoose.model('pokerRoom', pokerRoomSchema);

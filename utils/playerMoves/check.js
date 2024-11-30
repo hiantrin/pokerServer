@@ -43,6 +43,8 @@ export const nextStage = async (room, roomId, io) => {
                     {
                         room.paud = room.paud - ((room.paud / 100 ) * room.parameters.tax)
                         sendTaxToAdmin(room)
+                        let winnings = ((room.paud / 100) * room.parameters.tax)
+                        room.parameters.adminWinnings = room.parameters.adminWinnings + winnings
                     }
                     room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
                     i++

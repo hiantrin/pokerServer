@@ -19,6 +19,8 @@ const launchTwoParty = async (room, roomId, io, userId) => {
         {
             room.paud = room.paud - ((room.paud / 100 ) * room.parameters.tax)
             sendTaxToAdmin(room)
+            let winnings = ((room.paud / 100) * room.parameters.tax)
+            room.parameters.adminWinnings = room.parameters.adminWinnings + winnings
         }
         room.playersData[index].userShips = room.playersData[index].userShips + room.paud
         room.playersTurn = null
@@ -96,10 +98,10 @@ export const playerFolded = async (userId, roomId, io) => {
                     }
                 } else if (plyerOut.length < 2) {
                     room.playersTurn = null
-                    await saveAndMove(roomId, room, io)
+                    let counter = await saveAndMove(roomId, room, io)
                     setTimeout(async () => {
                         await getWinner(room, roomId, io)
-                    }, 2000)
+                    }, 2000 + counter)
                     return
                 }
             }
