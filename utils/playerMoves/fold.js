@@ -53,7 +53,7 @@ export const playerFolded = async (userId, roomId, io) => {
         if (!room || userId !== room.playersTurn)
             return
     
-        if (room.players.length == 2) {
+        if (room.playersData.length == 2) {
             console.log("it folded here")
             await launchTwoParty(room, roomId, io, userId)
             return

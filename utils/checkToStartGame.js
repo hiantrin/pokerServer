@@ -8,7 +8,7 @@ const pokerRoomCollection = db.collection("pokerrooms")
 async function checkToStartGame(roomId) {
     try {
         const room = await pokerRoomCollection.findOne({ roomId: roomId });
-        if (room && room.players.length >= 2 && !room.gameStarted) {
+        if (room && room.playersData.length >= 2 && !room.gameStarted) {
             if (room.parameters && room.parameters.randomSets == false)
             {
                     return {status: true, counter: true}

@@ -102,10 +102,6 @@ const pokerRoomSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
-    players: {
-        type: [String],
-        required: true,
-    },
     buyIn : {
         type: Number,
         required: true

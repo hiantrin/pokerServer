@@ -44,8 +44,7 @@ export const quickRobot = async (roomId, robotId, io) => {
         //     return res.status(200).send(user)
         // }
         room.playersData = room.playersData.filter((item) => item.userId != robotId)
-        room.players = room.players.filter(item => item != robotId)
-        if (room.players.length == 1)
+        if (room.playersData.length == 1)
         {
             room.gameStarted = false
             room.gameRound = "preflop"
@@ -77,12 +76,11 @@ export const quickRobot = async (roomId, robotId, io) => {
 const createRobot = async (room, userShips) => {
     try {
         const robotInfos = createRobotInfos(userShips)
-        room.players.push(robotInfos.userId)
         if (!room.gameStarted)
         {
             room.playersData.push(robotInfos)
             const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-                $set : {players : room.players, playersData: room.playersData, full: room.players.length == room.players.maxPlayers ? true : false}
+                $set : {playersData: room.playersData, full: room.playersData.length == room.maxPlayers ? true : false}
             }, {new: true, runValidators: true})
             if (!newRoom)
                 return null

@@ -71,28 +71,28 @@ const playPlayersTurn = async (room, userId, io) => {
 
 
 export const checkWhoIsNext = async (room, io) => {
-	let index = room.playersData.findIndex((player) => player.userId == room.playersTurn);
+	let index = room.playersData.findIndex((player) => player.userId === room.playersTurn);
 	if (room.playersData[index].robot === true) {
 		setTimeout(async () => {
 			await robotPlays(room, index, io);
 		}, 3000);
 	} else {
-		handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
+		// handlePlayerTurnTimeout(room, room.roomId, io, room.playersTurn);
 	}
 }
 
 export const nextPlayer = (room) => {
-  let index = room.players.findIndex(player => player === room.playersTurn);
-  const part1 = room.players.slice(index);
-  const part2 = room.players.slice(0, index);
+  let index = room.playersData.findIndex(player => player.userId === room.playersTurn);
+  const part1 = room.playersData.slice(index);
+  const part2 = room.playersData.slice(0, index);
   const newArray = part1.concat(part2);
   let i = 1
   while (i < newArray.length)
     {
-      const playerData = room.playersData.filter((item) => item.userId == newArray[i])
+      const playerData = room.playersData.filter((item) => item.userId == newArray[i].userId)
         if (playerData[0].inTheGame && playerData[0].userShips > 0)
         {
-          room.playersTurn = newArray[i]
+          room.playersTurn = newArray[i].userId
           return room.playersTurn
         }
         i++
@@ -118,7 +118,6 @@ const kickUsers = async (room, io) => {
 				$set : {roomId: null}
 			}, {new: true, runValidators: true})
 			room.playersData = room.playersData.filter((item) => item.userId !== playersOut[i].userId)
-			room.players = room.players.filter((item) => item !== playersOut[i].userId)
 			i++
 		}
 		i = 0
@@ -126,7 +125,6 @@ const kickUsers = async (room, io) => {
 		while (counter < room.waitingRoom.length)
 		{
 			room.playersData.push(room.waitingRoom[counter])
-			room.players.push(room.waitingRoom[counter].userId)
 			room.waitingRoom = room.waitingRoom.filter((item) => item.userId !== room.waitingRoom[counter].userId)
 			counter++
 		}
@@ -134,6 +132,8 @@ const kickUsers = async (room, io) => {
 		{
 			room.playersData[i].currentCards = null
 			room.playersData[i].inTheGame = true
+			room.playersData[i].raised = 0
+			room.playersData[i].bet = 0
 			i++
 		}
 		room.checking = false
@@ -141,6 +141,7 @@ const kickUsers = async (room, io) => {
 		room.winner = null
 		room.lastPlayerMove = null
 		room.gameStarted = true
+		room.paud = 0
 		const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
 			{ roomId: room.roomId }, // Filter
 			{ $set: room }, // Update
@@ -157,7 +158,7 @@ const kickUsers = async (room, io) => {
 const createCardsPlayers = (room) => {
 		const deck = createDeck();
 		shuffleDeck(deck);
-		const hands = dealCards(deck, room.players.length, room.gameType.cards);
+		const hands = dealCards(deck, room.playersData.length, room.gameType.cards);
 		const communityCards = dealCommunityCards(deck);
 		const communityCards2 = dealCommunityCards(deck);
 		room.communityCards = communityCards;
@@ -235,9 +236,9 @@ const startTheGame = async (roomId, io) => {
         room.paud = room.bigBlind + room.smallBlind
         room.lastRaise = room.bigBlind
         if (room.playersData.length == 2 ) {
-          room.playersTurn = room.players[0]
+          room.playersTurn = room.playersData[0].userId
         } else 
-          room.playersTurn = room.players[2]
+          room.playersTurn = room.playersData[2].userId
     } else {
 		room = initialGame(room)
 		const myNewRoom = await pokerRoomCollection.findOneAndUpdate(

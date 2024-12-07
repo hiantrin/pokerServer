@@ -101,7 +101,6 @@ router.patch("/quitTable", checkToken, async (req, res) => {
             $set: {roomId: null, ships: oldUser.ships + thePlayer[0].userShips}
         }, { new: true, runValidators: true})
         room.playersData = room.playersData.filter((item) => item.userId != req.userId)
-        room.players = room.players.filter(item => item != req.userId)
 
         if (room.playersData.length == 1)
         {
@@ -155,8 +154,6 @@ router.get("/joinRoom", checkToken, async (req, res) => {
             return res.status(400).send("didn't find room")
         else if (room.full)
             return res.status(300).send("room is full")
-        else if (!room.players.includes(req.userId) && !room.gameStarted)
-            room.players.push(req.userId)
         const oldUser = await collection.findOne({ _id: req.userId });
         if (!oldUser)
             return res.status(400).send("didn't find user")
@@ -170,7 +167,7 @@ router.get("/joinRoom", checkToken, async (req, res) => {
             if (room.playerPlace.filter(item => item.userId == req.userId))
                 room.playerPlace.push(createNode(user, room.buyIn, 0))
             await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-                $set : {players : room.players, playerPlace: room.playerPlace, full: room.players.length == room.players.maxPlayers ? true : false}
+                $set : {playerPlace: room.playerPlace, full: room.playersData.length == room.maxPlayers ? true : false}
             }, {new: true, runValidators: true})
         }
         else if (!room.gameStarted)
@@ -178,7 +175,7 @@ router.get("/joinRoom", checkToken, async (req, res) => {
             if (room.playersData.filter(item => item.userId == req.userId))
                 room.playersData.push(createNode(user, room.buyIn, getPlayerSet(room)))
             const newRoom = await pokerRoomCollection.findOneAndUpdate({roomId: room.roomId}, {
-                $set : {players : room.players, playersData: room.playersData, full: room.players.length == room.players.maxPlayers ? true : false}
+                $set : {playersData: room.playersData, full: room.playersData.length == room.maxPlayers ? true : false}
             }, {new: true, runValidators: true})
             if (!newRoom)
                 return res.status(400).send("sorry can't join room right now")
