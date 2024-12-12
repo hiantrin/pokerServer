@@ -83,3 +83,35 @@ export const showCards = async (userId, roomId, number, io) => {
         console.log(err)
     }
 }
+
+
+export const sendGift = async (type, userId, name, roomId, io) => {
+    try {
+        const room = await pokerRoomCollection.findOne({roomId: roomId})
+        if (!room)
+            return
+        if (type == "all")
+        {
+            let i = 0
+            while (i < room.playersData.length)
+            {
+                room.playersData[i].gift = name
+                i++
+            }
+        }
+        else {
+            let playerIndex = room.playersData.findIndex((item) => item.userId == userId)
+            if (playerIndex < 0)
+                return
+            room.playersData[playerIndex].gift = name
+        }
+        const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
+			{ roomId: roomId }, // Filter
+			{ $set: room }, // Update
+			{ returnDocument: 'after', runValidators: true } // Options
+		);
+        io.to(room.roomId).emit('updatePlayers', myNewRoom);
+    } catch (err) {
+        console.log(err)
+    }
+}

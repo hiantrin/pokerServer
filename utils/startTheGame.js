@@ -183,7 +183,8 @@ const createCardsPlayers = (room) => {
 			checked: false,
 			robot: room.playersData[index].robot,
 			set: room.playersData[index].set,
-			showCards: 0
+			showCards: 0,
+			gift : room.playersData[index].gift
 		}));
 		room.playersData = room.playersData.sort((a, b) => a.set - b.set)
 

@@ -82,6 +82,11 @@ const playerSchema = new mongoose.Schema({
         type : Number,
         required: true,
         dafault: 0
+    },
+    gift: {
+        type : String,
+        required: true,
+        dafault: ""
     }
 })
 

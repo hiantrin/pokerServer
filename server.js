@@ -22,7 +22,7 @@ import { callLastRaise } from "./utils/playerMoves/call.js";
 import { playerFolded } from "./utils/playerMoves/fold.js";
 import { quickRobot } from "./utils/robot/createRobot.js";
 import { acceptSet, getRoomInfos, kickUser, sendData, sendMessage, takeSet } from "./utils/help.js";
-import { adminAcceptRebuy, launchReBuy, showCards } from "./utils/helpTable.js";
+import { adminAcceptRebuy, launchReBuy, sendGift, showCards } from "./utils/helpTable.js";
 
 dotenv.config();
 const app = express();
@@ -138,6 +138,14 @@ io.on("connection", (socket) => {
 		}
 	})
 
+  socket.on("sendGift", async (data) => {
+		const { type, userId, name, roomId} = data
+		try {
+			await sendGift(type, userId, name, roomId, io)
+		} catch (err) {
+			console.log(err)
+		}
+	})
 
   // sockets responsible for the game
   socket.on("call", async (data) => {
