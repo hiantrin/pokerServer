@@ -73,8 +73,10 @@ router.patch("/quitTable", checkToken, async (req, res) => {
         const room = await pokerRoomCollection.findOne({roomId: req.body.roomId})
         if (!room)
         {
-            console.log("here1")
-            return res.status(400).send("didn't find room")
+            const myUser = await User.findByIdAndUpdate(req.userId, {
+                $set: {roomId: null}
+            }, { new: true, runValidators: true})
+            return res.status(400).send(myUser)
         }
         const thePlayer = room.playersData.filter((item) => item.userId == req.userId)
         if (thePlayer.length == 0)

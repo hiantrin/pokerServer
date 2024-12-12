@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import Club from "../models/Club.js";
-import User from "../models/Users.js";
 import { playerFolded } from "./playerMoves/fold.js";
 import startTheGame from "./startTheGame.js";
 

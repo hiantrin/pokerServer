@@ -134,6 +134,7 @@ const kickUsers = async (room, io) => {
 			room.playersData[i].inTheGame = true
 			room.playersData[i].raised = 0
 			room.playersData[i].bet = 0
+			room.playersData[i].showCards = 0
 			i++
 		}
 		room.checking = false
@@ -142,6 +143,7 @@ const kickUsers = async (room, io) => {
 		room.lastPlayerMove = null
 		room.gameStarted = true
 		room.paud = 0
+		room.cardsRound = 0
 		const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
 			{ roomId: room.roomId }, // Filter
 			{ $set: room }, // Update
@@ -181,6 +183,7 @@ const createCardsPlayers = (room) => {
 			checked: false,
 			robot: room.playersData[index].robot,
 			set: room.playersData[index].set,
+			showCards: 0
 		}));
 		room.playersData = room.playersData.sort((a, b) => a.set - b.set)
 

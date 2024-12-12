@@ -22,6 +22,7 @@ import { callLastRaise } from "./utils/playerMoves/call.js";
 import { playerFolded } from "./utils/playerMoves/fold.js";
 import { quickRobot } from "./utils/robot/createRobot.js";
 import { acceptSet, getRoomInfos, kickUser, sendData, sendMessage, takeSet } from "./utils/help.js";
+import { adminAcceptRebuy, launchReBuy, showCards } from "./utils/helpTable.js";
 
 dotenv.config();
 const app = express();
@@ -72,7 +73,7 @@ io.on("connection", (socket) => {
           if (hasTwoPlayers.counter == false)
             await startTheGame(room, io)
           else {
-			io.to(room).emit('launchCounter');
+			      io.to(room).emit('launchCounter');
             setTimeout(async () => {
               await startTheGame(room, io)
             }, 5000)
@@ -81,8 +82,7 @@ io.on("connection", (socket) => {
       } catch (error) {
         console.error("Error checking to start game:", error);
       }
-    }
-    else {
+    } else {
       console.log("this is room =>", room )
       sendData(room, io)
     }
@@ -109,8 +109,35 @@ io.on("connection", (socket) => {
     } catch (err) {
       console.log(err)
     }
-
   })
+
+  	socket.on("reBuy", async (data) => {
+		const {userId, roomId} = data
+		try {
+			await launchReBuy(userId, roomId, io)
+		} catch (err) {
+			console.log(err)
+		}
+	})
+
+  socket.on("reBuy", async (data) => {
+		const {userId, roomId} = data
+		try {
+			await adminAcceptRebuy(userId, roomId, io)
+		} catch (err) {
+			console.log(err)
+		}
+	})
+
+  socket.on("showCards", async (data) => {
+		const {userId, roomId, number} = data
+		try {
+			await showCards(userId, roomId, number, io)
+		} catch (err) {
+			console.log(err)
+		}
+	})
+
 
   // sockets responsible for the game
   socket.on("call", async (data) => {

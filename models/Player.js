@@ -16,7 +16,6 @@ export const handSchema = new mongoose.Schema({
     }
 })
 
-
 const playerSchema = new mongoose.Schema({
     userId: {
         type: String,
@@ -78,6 +77,11 @@ const playerSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: false
+    },
+    showCards : {
+        type : Number,
+        required: true,
+        dafault: 0
     }
 })
 

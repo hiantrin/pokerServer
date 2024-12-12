@@ -202,6 +202,11 @@ const pokerRoomSchema = new mongoose.Schema({
         type: Array,
         default: []
     },
+    cardsRound : {
+        type: Number,
+        required: true,
+        default: 0
+    }
 })
 
 const PokerRoom = mongoose.model('pokerRoom', pokerRoomSchema);

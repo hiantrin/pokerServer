@@ -74,6 +74,15 @@ const secondCards = async (room, io, counter) => {
         if (room.parameters && room.parameters.playTwice && players.length == 2)
         {
             setTimeout(async () => {
+                console.log("this is it, ==> ", room.gameRound)
+                if (counter == 5000)
+                    room.cardsRound = 1
+                else if (counter == 2000)
+                    room.cardsRound = 2
+                else if (counter == 1000)
+                    room.cardsRound = 3
+                else
+                    room.cardsRound = 0
                 room.gameRound = "finish"
                 const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
                     { roomId: room.roomId }, // Filter
