@@ -71,12 +71,13 @@ export const saveAndMove = async (roomId, room, io) => {
 
 export const callLastRaise = async (userId, roomId, io) => {
     try {
-        let room = await pokerRoomCollection.findOne({ roomId: roomId });
+        let room = await pokerRoomCollection.findOne({ roomId: roomId })
         if (!room || userId !== room.playersTurn)
             return
         let index = room.playersData.findIndex(player => player.userId === userId);
         room.paud = (room.lastRaise - room.playersData[index].bet) +  room.paud 
         room.playersData[index].userShips = room.playersData[index].userShips - (room.lastRaise - room.playersData[index].bet)
+        room.playersData[index].loseWin = room.playersData[index].loseWin - (room.lastRaise - room.playersData[index].bet)
         room.playersData[index].bet = room.lastRaise
         room.lastPlayerMove = {
             userId : userId,

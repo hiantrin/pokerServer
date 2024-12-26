@@ -47,6 +47,7 @@ export const nextStage = async (room, roomId, io) => {
                         room.parameters.adminWinnings = room.parameters.adminWinnings + winnings
                     }
                     room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
+                    room.playersData[myIndex].loseWin =  room.playersData[myIndex].loseWin + (room.paud / win.winningPlayers.length)
                     i++
                 }
                 const myNewRoom = await pokerRoomCollection.findOneAndUpdate(

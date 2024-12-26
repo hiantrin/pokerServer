@@ -23,6 +23,7 @@ const launchTwoParty = async (room, roomId, io, userId) => {
             room.parameters.adminWinnings = room.parameters.adminWinnings + winnings
         }
         room.playersData[index].userShips = room.playersData[index].userShips + room.paud
+        room.playersData[index].loseWin = room.playersData[index].loseWin + room.paud
         room.playersTurn = null
         room.winner = {
             userId : room.playersData[index].userId,

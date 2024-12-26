@@ -44,11 +44,13 @@ export const getWinner = async (room, roomId, io) => {
             if (room.parameters)
             {
                 room.paud = room.paud - ((room.paud / 100 ) * room.parameters.tax)
+
                 sendTaxToAdmin(room)
                 let winnings = ((room.paud / 100) * room.parameters.tax)
                 room.parameters.adminWinnings = room.parameters.adminWinnings + winnings
             }
             room.playersData[myIndex].userShips = room.playersData[myIndex].userShips + (room.paud / win.winningPlayers.length)
+            room.playersData[myIndex].loseWin =  room.playersData[myIndex].loseWin + (room.paud / win.winningPlayers.length)
             i++
         }
         const myNewRoom = await pokerRoomCollection.findOneAndUpdate(
@@ -112,6 +114,7 @@ export const allIn = async (userId, roomId, io) => {
         }
 		room.paud = room.paud + room.playersData[index].userShips
         room.playersData[index].userShips = 0
+        room.playersData[index].loseWin = room.playersData[index].loseWin - (room.playersData[index].userShips - room.playersData[index].loseWin.bet)
         room.playersData[index].bet = room.playersData[index].bet + room.playersData[index].userShips
         room.lastPlayerMove = {
             userId : userId,

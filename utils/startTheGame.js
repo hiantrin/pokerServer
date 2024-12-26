@@ -184,7 +184,8 @@ const createCardsPlayers = (room) => {
 			robot: room.playersData[index].robot,
 			set: room.playersData[index].set,
 			showCards: 0,
-			gift : room.playersData[index].gift
+			gift : room.playersData[index].gift,
+			loseWin : room.playersData[index].loseWin
 		}));
 		room.playersData = room.playersData.sort((a, b) => a.set - b.set)
 
@@ -230,14 +231,16 @@ const startTheGame = async (roomId, io) => {
 			{
 				room.playersData[i].userShips = room.playersData[0].userShips - room.smallBlind
         		room.playersData[i].bet = room.smallBlind
+				room.playersData[i].loseWin =  room.playersData[i].loseWin - room.smallBlind
 			}
 			else {
-				room.playersData[i].userShips = room.playersData[i].userShips - room.bigBlind
-				room.playersData[i].bet = room.bigBlind
+				room.playersData[i].userShips = room.playersData[i].userShips - (room.bigBlind - 1)
+				room.playersData[i].bet = (room.bigBlind - 1)
+				room.playersData[i].loseWin =  room.playersData[i].loseWin - ( room.bigBlind - 1)
 			}
 			i++
 		}
-        room.paud = room.bigBlind + room.smallBlind
+        room.paud = room.bigBlind + room.smallBlind - 1
         room.lastRaise = room.bigBlind
         if (room.playersData.length == 2 ) {
           room.playersTurn = room.playersData[0].userId

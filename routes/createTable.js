@@ -26,7 +26,8 @@ const createNode = (user, ships, set) => {
         avatar64: user.avatar64,
         inTheGame: false,
         robot: false,
-        set : set
+        set : set,
+        loseWin: 0
     }
     return node
 }

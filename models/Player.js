@@ -87,6 +87,11 @@ const playerSchema = new mongoose.Schema({
         type : String,
         required: true,
         dafault: ""
+    },
+    loseWin : {
+        type : Number,
+        required: true,
+        default: 0
     }
 })
 
